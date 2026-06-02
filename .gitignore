@@ -6,3 +6,9 @@ venv/
 
 # OS
 .DS_Store
+
+# Editor / IDE
+.vscode/
+
+# MuJoCo scratch log
+MUJOCO_LOG.TXT
