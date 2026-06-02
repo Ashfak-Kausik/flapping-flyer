@@ -9,6 +9,13 @@ venv/
 
 # Editor / IDE
 .vscode/
+*.db
+*.db-shm
+*.db-wal
 
 # MuJoCo scratch log
 MUJOCO_LOG.TXT
+
+# Large binary / data files
+*.mjb
+*.bag
