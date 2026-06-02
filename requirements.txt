@@ -1,0 +1,4 @@
+# Pinned for reproducibility. Re-pin deliberately, never by accident.
+mujoco==3.9.0
+numpy>=1.26
+matplotlib>=3.8

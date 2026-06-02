@@ -1,0 +1,120 @@
+<mujoco model="flapping_flyer">
+  <!-- ===================================================================
+       STAGE 1 (rebuild) — BIO-INSPIRED BODY
+       Mosquito-inspired micro-flyer. Units: meters, kilograms, seconds.
+       Justified in docs/01_body_model.md.
+
+       Design intent (function-faithful, not art-faithful):
+         - slender 3-region body: head + thorax (mass forward) + thin tail
+         - mass concentrated FORWARD, just below the wing hinges
+           -> centre of mass sits below+near the wing base (pendulum-stable)
+         - ONE wing pair on the thorax (Diptera), elongated-oval planform,
+           area biased slightly outboard (Li & Nabawy 2022)
+         - halteres: tiny nubs, present for looks now, EARMARKED to become the
+           rotation-rate sensor (biological gyroscope) in the control stage
+         - NO legs, NO abdomen segments  -> no wasted mass, no extra DOF
+
+       Frame convention (anatomical):
+         +x = forward (head)   ;   y = left/right span   ;   +z = up
+         stroke hinge axis = z (vertical) -> wing sweeps fore/aft
+         pitch  hinge axis = y (span)     -> wing feathers / flips
+
+       GEOMETRY + MASS + JOINTS only. No aerodynamics (we inject it, Stage 2).
+       =================================================================== -->
+
+  <option timestep="1e-4" gravity="0 0 -9.81" integrator="implicitfast"/>
+  <!-- implicitfast: handles joint damping / actuators stably at this timestep,
+       so the model does NOT blow up when the viewer auto-runs (the NaN you saw
+       came from a stiff servo under the old explicit RK4 integrator). -->
+
+  <!-- ===================== VISUALS (menagerie look) ===================== -->
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20" offwidth="1280" offheight="960"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0"
+             width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge"
+             rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8"
+             width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true"
+              texrepeat="5 5" reflectance="0.2"/>
+    <material name="thorax_mat" rgba="0.25 0.25 0.28 1"/>
+    <material name="wing_mat"   rgba="0.55 0.62 0.70 0.45"/>
+  </asset>
+
+  <default>
+    <joint damping="1e-8" armature="0"/>
+    <geom density="1200"/>
+  </default>
+
+  <worldbody>
+    <light pos="0 0 0.3" dir="0 0 -1" directional="true"
+           diffuse="0.7 0.7 0.7"/>
+    <geom name="floor" type="plane" size="0 0 0.01" material="groundplane"/>
+
+    <!-- THORAX (root). Clamped to world for now. Stage 3 -> <freejoint/>.
+         Sits 50 mm up so it's clearly above the floor in the viewer. -->
+    <body name="thorax" pos="0 0 0.05">
+
+      <!-- main flight mass: thorax block, just below the wing hinges -->
+      <geom name="thorax_g" type="ellipsoid" pos="0.001 0 0"
+            size="0.0020 0.0012 0.0012" mass="60e-6" material="thorax_mat"/>
+      <!-- head: small, forward -->
+      <geom name="head_g" type="sphere" pos="0.0040 0 0"
+            size="0.0008" mass="3e-6" material="thorax_mat"/>
+      <!-- abdomen / tail: long, THIN, LIGHT, trailing aft. Tapered ellipsoid
+           reads as an abdomen and gives a little aft area for pitch stability
+           at almost no mass cost. -->
+      <geom name="tail_g" type="ellipsoid" pos="-0.0055 0 0"
+            size="0.0050 0.0006 0.0006" mass="12e-6" material="thorax_mat"/>
+
+      <!-- halteres: tiny nubs just behind the wing bases. Visual now,
+           EARMARKED as the future rate sensor. Mass ~0.1 mg each (negligible). -->
+      <geom name="haltere_R" type="capsule" fromto="-0.0008 0.0007 0  -0.0016 0.0016 -0.0004"
+            size="0.00012" mass="1e-7" material="thorax_mat"/>
+      <geom name="haltere_L" type="capsule" fromto="-0.0008 -0.0007 0  -0.0016 -0.0016 -0.0004"
+            size="0.00012" mass="1e-7" material="thorax_mat"/>
+
+      <!-- ============ RIGHT WING (extends +y) ============
+           shoulder above & right of the thorax centre -->
+      <body name="stroke_R" pos="0 0.0010 0.0012">
+        <joint name="stroke_R" type="hinge" axis="0 0 1" range="-90 90"/>
+        <inertial pos="0 0 0" mass="1e-7" diaginertia="1e-13 1e-13 1e-13"/>
+        <body name="wing_R" pos="0 0 0">
+          <joint name="pitch_R" type="hinge" axis="0 1 0" range="-120 120"/>
+          <!-- elongated-oval wing: span along y, chord along x, thin in z.
+               centre pushed to 0.55*R outboard (higher radial centroid),
+               and shifted -c/4 in x so the PITCH AXIS is at the quarter-chord. -->
+          <geom name="wing_R_g" type="ellipsoid" pos="-0.000875 0.0066 0"
+                size="0.00175 0.0060 0.000025" material="wing_mat"
+                mass="1.0e-6"/>
+        </body>
+      </body>
+
+      <!-- ============ LEFT WING (extends -y) ============ -->
+      <body name="stroke_L" pos="0 -0.0010 0.0012">
+        <joint name="stroke_L" type="hinge" axis="0 0 1" range="-90 90"/>
+        <inertial pos="0 0 0" mass="1e-7" diaginertia="1e-13 1e-13 1e-13"/>
+        <body name="wing_L" pos="0 0 0">
+          <joint name="pitch_L" type="hinge" axis="0 1 0" range="-120 120"/>
+          <geom name="wing_L_g" type="ellipsoid" pos="-0.000875 -0.0066 0"
+                size="0.00175 0.0060 0.000025" material="wing_mat"
+                mass="1.0e-6"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <!-- Position actuators on the four hinges. Gains kept gentle so they are
+       stable under implicitfast; Stage 2 may instead PRESCRIBE kinematics. -->
+  <actuator>
+    <position name="a_stroke_R" joint="stroke_R" kp="0.01" kv="1e-5"/>
+    <position name="a_pitch_R"  joint="pitch_R"  kp="0.01" kv="1e-5"/>
+    <position name="a_stroke_L" joint="stroke_L" kp="0.01" kv="1e-5"/>
+    <position name="a_pitch_L"  joint="pitch_L"  kp="0.01" kv="1e-5"/>
+  </actuator>
+</mujoco>
