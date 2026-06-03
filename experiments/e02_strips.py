@@ -1,5 +1,5 @@
 """
-e02_strips.py — STAGE 2 CHECK (piece 1): wing discretisation.
+e02_strips.py — STAGE 2 CHECK (piece 1): wing discretization.
 
 Proves the strip discretisation faithfully represents the real wing:
   (1) strip areas must sum to the analytic ellipse area (convergence),

@@ -66,3 +66,76 @@ def build_strips(c_max, y_center, span_semi, n_strips=20):
     c = chord(r, c_max, y_center, span_semi)
     dS = c * dr
     return dict(r=r, dr=dr, c=c, dS=dS)
+
+
+# ---------------------------------------------------------------------------
+# Stage 2, piece 2: strip VELOCITY and ANGLE OF ATTACK.
+# These need the live MuJoCo state (the wing must be moving to have a velocity),
+# so unlike the functions above they take (model, data). Theory: Parts 1, 5, 10.
+# ---------------------------------------------------------------------------
+
+def wing_frame(data, wing_bid):
+    """The wing's orientation in the world, as three unit vectors.
+
+    MuJoCo stores each body's world rotation as a flat 9-vector (xmat); its
+    columns are the body's local axes expressed in world coordinates. By the
+    convention baked into flyer.xml:
+        local x -> chord direction   (leading<->trailing)
+        local y -> span direction    (root->tip)
+        local z -> wing-face normal   (the flat face)
+    Returns (origin_world, span_hat, chord_hat, normal_hat).
+    """
+    xpos = data.xpos[wing_bid].copy()
+    R = data.xmat[wing_bid].reshape(3, 3)
+    chord_hat = R[:, 0].copy()
+    span_hat = R[:, 1].copy()
+    normal_hat = R[:, 2].copy()
+    return xpos, span_hat, chord_hat, normal_hat
+
+
+def strip_kinematics(model, data, wing_bid, r):
+    """Velocity and angle of attack of every blade-element strip.
+
+    For each spanwise station r we take the strip's reference point ON the
+    pitch axis (local x=0 == quarter-chord). Evaluating velocity there means
+    the wing's own feathering rotation contributes nothing (a point on the
+    rotation axis has zero velocity from that rotation), so we get the clean
+    TRANSLATIONAL velocity (stroke + body motion) — exactly what sets the
+    angle of attack. The pitch RATE is handled separately by later force terms.
+
+    Returns a dict of arrays (one row per strip):
+        v        : world velocity of the strip point            (n,3)
+        v_perp   : that velocity with the spanwise part removed  (n,3)
+        speed    : |v_perp|                                       (n,)
+        alpha    : angle of attack in radians, 0..pi/2            (n,)
+        span/chord/normal : the wing frame unit vectors (world)   (3,)
+    """
+    r = np.atleast_1d(np.asarray(r, dtype=float))
+    xpos, span, chord, normal = wing_frame(data, wing_bid)
+    xipos = data.xipos[wing_bid].copy()       # body CoM (velocity reference!)
+
+    # wing body spatial velocity in world: vel6 = [angular(3), linear(3)].
+    # NOTE: mj_objectVelocity references the LINEAR part at the body's CoM,
+    # so the rigid-body velocity of any point p is  v_com + omega x (p - CoM).
+    vel6 = np.zeros(6)
+    mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_BODY,
+                             wing_bid, vel6, 0)
+    omega, v_com = vel6[:3], vel6[3:]
+
+    pts = xpos[None, :] + np.outer(r, span)              # strip points (n,3)
+    v = v_com[None, :] + np.cross(np.broadcast_to(omega, pts.shape),
+                                  pts - xipos[None, :])   # world velocity (n,3)
+
+    v_span = (v @ span)[:, None] * span[None, :]          # spanwise component
+    v_perp = v - v_span                                   # in-plane velocity
+    speed = np.linalg.norm(v_perp, axis=1)
+
+    # angle of attack: angle of v_perp away from the chord line, in [0, pi/2].
+    # |normal-component| / |chord-component|. Sign of lift is handled later by
+    # explicit direction vectors, NOT by the sign of alpha (avoids the trap).
+    comp_n = np.abs(v_perp @ normal)
+    comp_c = np.abs(v_perp @ chord)
+    alpha = np.arctan2(comp_n, comp_c)
+
+    return dict(v=v, v_perp=v_perp, speed=speed, alpha=alpha,
+                span=span, chord=chord, normal=normal)
