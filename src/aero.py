@@ -263,3 +263,40 @@ def rotational_force(model, data, wing_bid, strips, rho=RHO):
     pts = xpos[None, :] + np.outer(strips["r"], span)
     T = np.cross(pts - xipos[None, :], dF).sum(axis=0)
     return F, T, dict(dF=dF, psidot=psidot)
+
+
+# ---------------------------------------------------------------------------
+# Stage 2, piece 5: ADDED MASS (acceleration reaction). Theory: Part 8.
+# This term needs the strip's NORMAL ACCELERATION, which we get by finite-
+# differencing the normal velocity between steps. So it is stateful: the
+# caller passes the previous normal velocity (vn_prev) and gets the new one
+# back to feed into the next step. On the very first step pass vn_prev=None.
+# ---------------------------------------------------------------------------
+
+def added_mass_force(model, data, wing_bid, strips, vn_prev, dt, rho=RHO):
+    """Added-mass (virtual-mass) reaction on one wing, summed over strips.
+
+    Per strip the clinging air slug has mass-per-span  m = rho*pi*c^2/4, and it
+    reacts to the strip's NORMAL acceleration a_n:
+        dF = - (rho*pi*c^2/4) * dr * a_n * normal_hat
+    a_n is found by finite-differencing the normal velocity  v_n = v_perp . n.
+    Returns (F, T, vn_now, info). Pass vn_prev=None on the first step (then the
+    force is reported as zero, since acceleration is undefined without history).
+    """
+    k = strip_kinematics(model, data, wing_bid, strips["r"])
+    v_perp, normal, span = k["v_perp"], k["normal"], k["span"]
+    c, dr = strips["c"], strips["dr"]
+
+    vn_now = v_perp @ normal                       # normal velocity per strip (n,)
+    if vn_prev is None:
+        return np.zeros(3), np.zeros(3), vn_now, dict(a_n=np.zeros_like(vn_now))
+
+    a_n = (vn_now - vn_prev) / dt                  # normal acceleration (n,)
+    m_per_span = rho * np.pi * c ** 2 / 4.0        # added mass per unit span (n,)
+    dF = (-(m_per_span * dr) * a_n)[:, None] * normal[None, :]   # reaction (n,3)
+
+    F = dF.sum(axis=0)
+    xpos = data.xpos[wing_bid]; xipos = data.xipos[wing_bid]
+    pts = xpos[None, :] + np.outer(strips["r"], span)
+    T = np.cross(pts - xipos[None, :], dF).sum(axis=0)
+    return F, T, vn_now, dict(a_n=a_n)
