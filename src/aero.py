@@ -27,10 +27,13 @@ def wing_params_from_model(model, geom_name="wing_R_g"):
     c_max = 2.0 * size[0]                # max chord (full extent along x)
     span_semi = size[1]                  # half-span of the ellipse (along y)
     y_center = pos[1]                    # spanwise centre of the wing area
+    x_le = pos[0] + size[0]              # leading edge (the +x edge), local x
+    x_hat0 = x_le / c_max if c_max > 0 else 0.25  # pitch axis (local x=0) from LE
     return dict(
         c_max=c_max,
         span_semi=span_semi,
         y_center=y_center,
+        x_hat0=x_hat0,                   # chordwise pitch-axis location (frac of chord)
         r_root=y_center - span_semi,     # innermost span station with area
         r_tip=y_center + span_semi,      # wing tip (= R, hinge-to-tip)
     )
@@ -216,4 +219,47 @@ def strips_for_wing(model, wing="R", n_strips=20):
     correct side and keeps the force signs right WITHOUT any per-wing hack.
     """
     p = wing_params_from_model(model, f"wing_{wing}_g")
-    return build_strips(p["c_max"], p["y_center"], p["span_semi"], n_strips)
+    s = build_strips(p["c_max"], p["y_center"], p["span_semi"], n_strips)
+    s["c_rot"] = np.pi * (0.75 - p["x_hat0"])   # rotational-lift coeff (Part 7)
+    return s
+
+
+# ---------------------------------------------------------------------------
+# Stage 2, piece 4: ROTATIONAL (Kramer) lift. Theory: Part 7.
+# Needs strips built by strips_for_wing() (which supplies c_rot).
+# ---------------------------------------------------------------------------
+
+def rotational_force(model, data, wing_bid, strips, rho=RHO):
+    """Rotational (Kramer) lift on one wing, summed over its strips.
+
+    Vector Kutta-Joukowski form, which carries the sign correctly:
+        dF = rho * Gamma_rot * (v_perp x span)
+    with the rotational circulation per strip
+        Gamma_rot = c_rot * c^2 * psidot
+    and psidot = omega . span_hat  — the wing's pitch rate about its OWN span
+    axis, read from the live MuJoCo state. Reading it (rather than passing a
+    scalar with a hand-chosen sign) is what keeps the two mirrored wings in
+    agreement instead of cancelling. (v_perp x span) is perpendicular to the
+    flow — a pure lift — and its direction flips with the sign of psidot, i.e.
+    the term turns on/off with rotation TIMING. Needs strips['c_rot'].
+    """
+    k = strip_kinematics(model, data, wing_bid, strips["r"])
+    v_perp, span = k["v_perp"], k["span"]
+
+    vel6 = np.zeros(6)
+    mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_BODY,
+                             wing_bid, vel6, 0)
+    omega = vel6[:3]
+    psidot = float(omega @ span)                 # signed pitch rate, per-wing
+
+    c, dr, c_rot = strips["c"], strips["dr"], strips["c_rot"]
+    gamma = c_rot * c ** 2 * psidot               # rotational circulation (n,)
+    cross = np.cross(v_perp, np.broadcast_to(span, v_perp.shape))  # (n,3)
+    dF = (rho * gamma * dr)[:, None] * cross
+
+    F = dF.sum(axis=0)
+    xpos = data.xpos[wing_bid]
+    xipos = data.xipos[wing_bid]
+    pts = xpos[None, :] + np.outer(strips["r"], span)
+    T = np.cross(pts - xipos[None, :], dF).sum(axis=0)
+    return F, T, dict(dF=dF, psidot=psidot)
