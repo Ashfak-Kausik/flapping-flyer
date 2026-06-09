@@ -1,9 +1,13 @@
 """
-src/kinematics.py — prescribed wing-flapping trajectories.
+src/kinematics.py — prescribed wing flapping, with control inputs.
 
-Pulls the stroke/feather motion (previously inlined in the experiments) into one
-place. stroke = fore/aft sweep; pitch = feather/flip. rot_phase advances the
-feather relative to the stroke (the rotation-timing control knob from Part 7).
+Base flap = stroke (fore/aft sweep) + feather (flip). On top sit three control
+inputs the controller will modulate (Stage 4):
+    u_thrust : symmetric stroke-amplitude change   -> vertical force
+    u_roll   : differential amplitude (R vs L)      -> roll torque (about +x)
+    u_pitch  : symmetric mean-stroke offset          -> pitch torque (about +y)
+signals(t, wing) returns the JOINT angle/rate for that wing, control included.
+The left wing's sweep is mirrored (-cos) so symmetric flapping is symmetric.
 """
 import numpy as np
 
@@ -15,14 +19,31 @@ class FlapKinematics:
         self.PHI = np.deg2rad(stroke_amp_deg)
         self.PSI = np.deg2rad(feather_amp_deg)
         self.d = rot_phase
-        self.fs = feather_sign            # -1 -> lift points up (see e04)
+        self.fs = feather_sign
+        self.u_thrust = 0.0
+        self.u_roll = 0.0
+        self.u_pitch = 0.0
 
-    def stroke(self, t):   return self.PHI * np.cos(self.W * t)
-    def dstroke(self, t):  return -self.PHI * self.W * np.sin(self.W * t)
+    def set_control(self, thrust=0.0, roll=0.0, pitch=0.0):
+        self.u_thrust, self.u_roll, self.u_pitch = thrust, roll, pitch
 
-    def pitch(self, t):
-        return self.fs * self.PSI * np.tanh(3 * np.sin(self.W * t + self.d))
+    def _amp(self, wing):                       # stroke amplitude for this wing
+        s = 1.0 if wing == "R" else -1.0
+        return self.PHI * (1.0 + self.u_thrust + s * self.u_roll)
 
-    def dpitch(self, t):
+    def _offset(self, wing):                    # mean-stroke offset (pitch knob)
+        s = 1.0 if wing == "R" else -1.0
+        return s * self.u_pitch
+
+    def signals(self, t, wing):
+        """Return (stroke_angle, stroke_rate, pitch_angle, pitch_rate) for the
+        named wing ('R' or 'L'), as JOINT values (mirroring already applied)."""
+        mirror = 1.0 if wing == "R" else -1.0
+        A = self._amp(wing)
+        off = self._offset(wing)
+        stroke = mirror * A * np.cos(self.W * t) + off
+        dstroke = -mirror * A * self.W * np.sin(self.W * t)
         a = self.W * t + self.d
-        return self.fs * self.PSI * 3 * self.W * np.cos(a) * (1 - np.tanh(3 * np.sin(a)) ** 2)
+        pitch = self.fs * self.PSI * np.tanh(3 * np.sin(a))
+        dpitch = self.fs * self.PSI * 3 * self.W * np.cos(a) * (1 - np.tanh(3 * np.sin(a)) ** 2)
+        return stroke, dstroke, pitch, dpitch

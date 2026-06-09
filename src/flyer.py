@@ -49,10 +49,10 @@ class Flyer:
 
     def _prescribe_wings(self, kin, t):
         d = self.data
-        d.qpos[self._j["stroke_R"][0]] =  kin.stroke(t);  d.qvel[self._j["stroke_R"][1]] =  kin.dstroke(t)
-        d.qpos[self._j["stroke_L"][0]] = -kin.stroke(t);  d.qvel[self._j["stroke_L"][1]] = -kin.dstroke(t)
-        d.qpos[self._j["pitch_R"][0]]  =  kin.pitch(t);   d.qvel[self._j["pitch_R"][1]]  =  kin.dpitch(t)
-        d.qpos[self._j["pitch_L"][0]]  =  kin.pitch(t);   d.qvel[self._j["pitch_L"][1]]  =  kin.dpitch(t)
+        for wing in ("R", "L"):
+            st, dst, pt, dpt = kin.signals(t, wing)
+            d.qpos[self._j[f"stroke_{wing}"][0]] = st;  d.qvel[self._j[f"stroke_{wing}"][1]] = dst
+            d.qpos[self._j[f"pitch_{wing}"][0]]  = pt;  d.qvel[self._j[f"pitch_{wing}"][1]]  = dpt
 
     def step(self, kin, t):
         self._prescribe_wings(kin, t)
@@ -83,3 +83,16 @@ class Flyer:
         roll = np.arctan2(up[1], up[2])
         height = self.data.xpos[self.thorax][2]
         return pitch, roll, height
+
+    def sense(self):
+        """Body-state sensor (stand-in for the halteres + an altimeter).
+        Returns attitude (pitch, roll), body angular rates (wx, wy, wz) in the
+        WORLD frame, height, and vertical speed."""
+        pitch, roll, height = self.attitude()
+        vel6 = np.zeros(6)
+        mujoco.mj_objectVelocity(self.model, self.data, mujoco.mjtObj.mjOBJ_BODY,
+                                 self.thorax, vel6, 0)
+        wx, wy, wz = vel6[:3]
+        vz = vel6[5]
+        return dict(pitch=pitch, roll=roll, height=height,
+                    wx=wx, wy=wy, wz=wz, vz=vz)
