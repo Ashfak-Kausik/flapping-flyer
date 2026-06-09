@@ -300,3 +300,32 @@ def added_mass_force(model, data, wing_bid, strips, vn_prev, dt, rho=RHO):
     pts = xpos[None, :] + np.outer(strips["r"], span)
     T = np.cross(pts - xipos[None, :], dF).sum(axis=0)
     return F, T, vn_now, dict(a_n=a_n)
+
+
+# ---------------------------------------------------------------------------
+# Stage 2, capstone: the FULL quasi-steady model = sum of the three terms.
+# ---------------------------------------------------------------------------
+
+def wing_aero(model, data, wing_bid, strips, vn_prev, dt, rho=RHO,
+              terms=("trans", "rot", "added")):
+    """Total quasi-steady aerodynamic force + torque on one wing.
+
+    Sum of translational + rotational + added-mass terms (Parts 4-9). Stateful
+    because added mass needs the previous normal velocity: pass vn_prev (None on
+    the first step) and feed the returned vn back next step. `terms` selects
+    which components to include (handy for ablation). Returns (F, T, vn, info)
+    where info[name] = (F_name, T_name) for each included term.
+    """
+    F = np.zeros(3); T = np.zeros(3); info = {}
+    if "trans" in terms:
+        Ft, Tt, _ = translational_force(model, data, wing_bid, strips, rho)
+        F += Ft; T += Tt; info["trans"] = (Ft, Tt)
+    if "rot" in terms:
+        Fr, Tr, _ = rotational_force(model, data, wing_bid, strips, rho)
+        F += Fr; T += Tr; info["rot"] = (Fr, Tr)
+    vn_now = vn_prev
+    if "added" in terms:
+        Fa, Ta, vn_now, _ = added_mass_force(model, data, wing_bid, strips,
+                                             vn_prev, dt, rho)
+        F += Fa; T += Ta; info["added"] = (Fa, Ta)
+    return F, T, vn_now, info
