@@ -82,10 +82,10 @@
       <!-- ============ RIGHT WING (extends +y) ============
            shoulder above & right of the thorax centre -->
       <body name="stroke_R" pos="0 0.0010 0.0012">
-        <joint name="stroke_R" type="hinge" axis="0 0 1" range="-90 90"/>
+        <joint name="stroke_R" type="hinge" axis="0 0 1" range="-90 90" armature="1e-8"/>
         <inertial pos="0 0 0" mass="1e-7" diaginertia="1e-13 1e-13 1e-13"/>
         <body name="wing_R" pos="0 0 0">
-          <joint name="pitch_R" type="hinge" axis="0 1 0" range="-120 120"/>
+          <joint name="pitch_R" type="hinge" axis="0 1 0" range="-120 120" armature="1e-8"/>
           <!-- elongated-oval wing: span along y, chord along x, thin in z.
                centre pushed to 0.55*R outboard (higher radial centroid),
                and shifted -c/4 in x so the PITCH AXIS is at the quarter-chord. -->
@@ -97,10 +97,10 @@
 
       <!-- ============ LEFT WING (extends -y) ============ -->
       <body name="stroke_L" pos="0 -0.0010 0.0012">
-        <joint name="stroke_L" type="hinge" axis="0 0 1" range="-90 90"/>
+        <joint name="stroke_L" type="hinge" axis="0 0 1" range="-90 90" armature="1e-8"/>
         <inertial pos="0 0 0" mass="1e-7" diaginertia="1e-13 1e-13 1e-13"/>
         <body name="wing_L" pos="0 0 0">
-          <joint name="pitch_L" type="hinge" axis="0 1 0" range="-120 120"/>
+          <joint name="pitch_L" type="hinge" axis="0 1 0" range="-120 120" armature="1e-8"/>
           <geom name="wing_L_g" type="ellipsoid" pos="-0.000875 -0.0066 0"
                 size="0.00175 0.0060 0.000025" material="wing_mat"
                 mass="1.0e-6"/>
