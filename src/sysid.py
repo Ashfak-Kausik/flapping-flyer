@@ -92,5 +92,28 @@ def assemble_A(D, M, I):
     A[3:6, 0:6] = Iinv @ D[3:6, 0:6]        # w_dot from aero torque derivatives
     A[0, 7] += G                            # +pitch tilts trim thrust -> +ax
     A[1, 6] += G                            # +roll  tilts trim thrust -> +ay
-    A[6, 3] = 1.0; A[7, 4] = 1.0; A[8, 5] = 1.0   # roll/pitch/yaw_dot = wx/wy/wz
+    # attitude kinematics from d(up)/dt = omega x up: pitch_dot=+wy, roll_dot=-wx
+    A[6, 3] = -1.0; A[7, 4] = 1.0; A[8, 5] = 1.0   # roll/pitch/yaw_dot = -wx/+wy/+wz
     return A
+
+
+def control_derivatives(fly, kin, du=0.05):
+    """6x3 wrench-vs-control matrix Bw at the hover trim (columns: u_thrust,
+    u_roll, u_pitch), measured the same way as the stability derivatives."""
+    Bw = np.zeros((6, 3))
+    for j, knob in enumerate(("thrust", "roll", "pitch")):
+        kin.set_control(**{knob: +du}); wp = cycle_avg_wrench(fly, kin, np.zeros(6))
+        kin.set_control(**{knob: -du}); wm = cycle_avg_wrench(fly, kin, np.zeros(6))
+        Bw[:, j] = (wp - wm) / (2 * du)
+    kin.set_control()
+    return Bw
+
+
+def assemble_B(Bw, M, I):
+    """Map the control-wrench derivatives into state space (9x3), state order
+    [vx vy vz wx wy wz roll pitch yaw]."""
+    Iinv = np.linalg.inv(I)
+    B = np.zeros((9, 3))
+    B[0:3, :] = Bw[0:3, :] / M
+    B[3:6, :] = Iinv @ Bw[3:6, :]
+    return B

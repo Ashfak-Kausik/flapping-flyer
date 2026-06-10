@@ -7,11 +7,11 @@ trim and reading the cycle-averaged aero wrench (src/sysid). Assembling A from
 the aero stability derivatives + thrust-tilt (gravity) + attitude kinematics
 gives a 9-state linear model whose EIGENVALUES quantify the instability.
 
-Result: the hovering flyer has two mildly unstable oscillatory modes (a
-longitudinal/pitch and a lateral/roll mode), a stable heave mode, and a neutral
-yaw drift — the textbook hovering-insect picture. The instability is slow
-(doubling in ~0.15-0.2 s), consistent with the slow open-loop divergence in e08,
-and comfortably controllable. A and B feed the controller design next.
+Result: the hovering flyer has a fast lateral/roll divergence plus a slower
+longitudinal/pitch oscillation, a stable heave mode, and a neutral yaw drift —
+the textbook hovering-insect picture. The instability is still slow versus a
+wingbeat (fastest doubling ~40 ms), consistent with the slow open-loop divergence
+in e08, and controllable. A and B feed the controller design next.
 """
 import sys
 from pathlib import Path
@@ -72,9 +72,11 @@ for e in sorted(ev, key=lambda z: -z.real):
     modes.append((e.real, e.imag))
 n_unst = int(np.sum(ev.real > 1e-3))
 print("-" * 64)
-print(f" -> {n_unst} unstable eigenvalues (2 oscillatory pairs: longitudinal + lateral)")
-print(f"    slowest doubling ~ {np.log(2)/max(ev.real):.3f} s -> MILD, slow, controllable")
-print(f"    CHECK: matches e08 (pitch>10deg only at ~78 ms), NOT a <20 ms tumble")
+print(f" -> {n_unst} unstable modes: a fast lateral/roll divergence + a slower")
+print(f"    longitudinal/pitch oscillation (the rest stable; yaw neutral)")
+print(f"    fastest doubling ~ {np.log(2)/max(ev.real)*1e3:.0f} ms (lateral) -> slow vs a wingbeat; controllable")
+print(f"    CHECK: consistent with e08 — pitch crosses 10deg first only because it gets a head")
+print(f"           start from the +{w0[4]*1e9:.0f} uNmm pitch-bias torque; neither mode is a <20 ms tumble")
 print("=" * 64)
 
 # ---- save data ----
