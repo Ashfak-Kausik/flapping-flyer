@@ -18,4 +18,4 @@ MUJOCO_LOG.TXT
 
 # Large binary / data files
 *.mjb
-*.bag
+*.bagmodels/flyer_corridor.xml

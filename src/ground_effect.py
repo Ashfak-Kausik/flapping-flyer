@@ -41,6 +41,28 @@ def kappa(d, R, k=K_GE, cap=KAPPA_MAX):
     return np.minimum(1.0 + k * (R / (4.0 * d)) ** 2, cap)
 
 
+def _as_list(surface):
+    """None -> []; single dict -> [dict]; list/tuple -> list. Lets one or several
+    surfaces (e.g. two corridor walls) be handled uniformly."""
+    if surface is None:
+        return []
+    if isinstance(surface, dict):
+        return [surface]
+    return list(surface)
+
+
+def kappa_pts(pts, surface, R, k=K_GE, cap=KAPPA_MAX):
+    """Per-strip enhancement summed over ALL surfaces: 1 + sum_i k (R/4 d_i)^2,
+    capped. Two walls each enhance their near wing; their contributions add."""
+    surfs = _as_list(surface)
+    if not surfs:
+        return np.ones(pts.shape[0])
+    enh = np.zeros(pts.shape[0])
+    for s in surfs:
+        enh += k * (R / (4.0 * strip_distance(pts, s))) ** 2
+    return np.minimum(1.0 + enh, cap)
+
+
 def _trans_ge(model, data, wing_bid, strips, surface, R, rho=aero.RHO):
     """aero.translational_force with each strip's LIFT scaled by kappa(d_strip).
     Drag is unchanged (ground effect acts through the lift/induced mechanism)."""
@@ -56,7 +78,7 @@ def _trans_ge(model, data, wing_bid, strips, surface, R, rho=aero.RHO):
     lift_hat[good] /= ln[good, None]
     xpos, xipos = data.xpos[wing_bid], data.xipos[wing_bid]
     pts = xpos[None, :] + np.outer(strips["r"], k["span"])
-    kap = kappa(strip_distance(pts, surface), R) if surface is not None else np.ones(len(sp))
+    kap = kappa_pts(pts, surface, R)
     q = 0.5 * rho * sp ** 2 * dS
     dF = q[:, None] * (kap[:, None] * cl[:, None] * lift_hat - cd[:, None] * u)
     F = dF.sum(axis=0)

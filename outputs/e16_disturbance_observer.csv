@@ -1,0 +1,11 @@
+set,wall_mm,true_gap_mm,delta_hat,Td_over_Ixx_or_estgap
+train,16,2.7,4270,4150
+train,18,4.7,2287,2243
+train,20,6.7,1407,1385
+train,24,10.7,673,664
+train,30,16.7,300,297
+train,38,24.7,136,134
+test,17,3.7,,3.92
+test,22,8.7,,8.44
+test,27,13.7,,13.25
+test,34,20.7,,20.59
