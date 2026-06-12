@@ -61,11 +61,13 @@ class HoverController:
     def reset(self):
         self.xh = np.zeros(self.Aa.shape[0])
 
-    def update(self, sense, dt):
-        """One control step. `sense` is Flyer.sense(). Returns (thrust, roll, pitch)."""
+    def update(self, sense, dt, vy_ref=0.0):
+        """One control step. `sense` is Flyer.sense(). `vy_ref` commands a lateral
+        velocity (m/s) for cruise / avoidance. Returns (thrust, roll, pitch)."""
         y = np.array([sense['vz'], sense['wx'], sense['wy'],
                       sense['roll'], sense['pitch'], sense['height'] - self.h_ref])
-        u = np.clip(-self.K @ self.xh + np.array([0.0, 0.0, self.pitch_trim]),
+        z_ref = np.zeros(self.Aa.shape[0]); z_ref[1] = vy_ref      # track vy = vy_ref
+        u = np.clip(-self.K @ (self.xh - z_ref) + np.array([0.0, 0.0, self.pitch_trim]),
                     -self.u_limit, self.u_limit)
         self.xh = self.xh + dt * (self.Aa @ self.xh + self.Ba @ u + self.L @ (y - self.C @ self.xh))
         return u
