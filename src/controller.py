@@ -61,7 +61,7 @@ class HoverController:
         self.na = Aa.shape[0]                       # 8 physical states
         self.B_roll_accel = Ba[WX, 1]               # roll authority in rad/s^2 per unit
         self.Ba_phys = Ba.copy()                    # 8x3, for feed-forward B lookups
-        self.CTRL_COL = {2: 0, 3: 1}                # vz<-thrust(0), wx<-roll(1)
+        self.CTRL_COL = {2: 0, 3: 1, 4: 2}          # vz<-thrust, wx<-roll, wy<-pitch
         self.dist_obs = dist_obs
         self.dist_states = list(dist_states)
         self.ff = 1.0 if feedforward else 0.0
@@ -111,6 +111,11 @@ class HoverController:
     def roll_dist(self):
         """Estimated WALL roll-acceleration disturbance (rad/s^2); sign = side."""
         return self.xh[self.dist_idx[3]] if self.dist_obs and 3 in self.dist_idx else 0.0
+
+    @property
+    def pitch_dist(self):
+        """Estimated fore/aft surface pitch-acceleration disturbance (rad/s^2)."""
+        return self.xh[self.dist_idx[4]] if self.dist_obs and 4 in self.dist_idx else 0.0
 
     @property
     def floor_dist(self):

@@ -29,9 +29,14 @@ KAPPA_MAX = 2.0     # cap per-strip enhancement (the (R/4d)^2 form blows up as d
 
 
 def strip_distance(pts, surface):
-    """Perpendicular distance of each strip point to a planar surface.
-    surface = dict(axis, sign, pos): plane at coordinate `pos` along `axis`
-    (0=x,1=y,2=z); `sign`=+1 if the flyer sits on the +side. d>0 toward flyer."""
+    """Perpendicular distance of each strip point to a planar surface, d>0 on the
+    flyer side. Two forms:
+      axis-aligned : dict(axis, sign, pos)  -> plane at `pos` along `axis`
+      general plane: dict(normal=[nx,ny,nz], point=[px,py,pz])  -> `normal` is the
+                     unit plane normal pointing TOWARD the flyer."""
+    if "normal" in surface:
+        n = np.asarray(surface["normal"], float); q = np.asarray(surface["point"], float)
+        return np.maximum((pts - q) @ n, 1e-6)
     coord = pts[:, surface["axis"]]
     return np.maximum(surface["sign"] * (coord - surface["pos"]), 1e-6)
 
