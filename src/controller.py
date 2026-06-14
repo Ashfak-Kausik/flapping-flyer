@@ -48,12 +48,17 @@ class HoverController:
                  Q=(5, 5, 20, 2, 2, 250, 250, 6e4), R=(50, 50, 50),
                  Qk=(1, 1, 0.05, 30, 30, 0.02, 0.02, 1e-6),
                  Rk=(1e-3, 100, 100, 1e-4, 1e-4, 1e-7), u_limit=0.6,
-                 dist_obs=True, dist_states=(3,), dist_q=2e8, feedforward=False):
+                 dist_obs=True, dist_states=(3,), dist_q=2e8, feedforward=False,
+                 optic_flow=False, Rk_of=(1e-2, 1e-2)):
         nz = len(KEEP)
         Aa = np.zeros((nz + 1, nz + 1)); Aa[:nz, :nz] = A[np.ix_(KEEP, KEEP)]; Aa[nz, 2] = 1.0
         Ba = np.zeros((nz + 1, 3)); Ba[:nz, :] = B[KEEP, :]
-        C = np.zeros((len(MEAS), nz + 1))
-        for r, idx in enumerate(MEAS):
+        meas = [0, 1] + list(MEAS) if optic_flow else list(MEAS)   # add vx,vy (optic flow)
+        if optic_flow and len(Rk) == len(MEAS):
+            Rk = tuple(Rk_of) + tuple(Rk)
+        self.optic_flow = optic_flow; self.meas = meas
+        C = np.zeros((len(meas), nz + 1))
+        for r, idx in enumerate(meas):
             C[r, idx] = 1.0
         # LQR on the 8-state (unchanged): u = -K z
         P = care(Aa, Ba, np.diag(Q), np.diag(R))
@@ -88,11 +93,15 @@ class HoverController:
     def reset(self):
         self.xh = np.zeros(self.Aa.shape[0])
 
-    def update(self, sense, dt, vy_ref=0.0):
-        """One control step. `vy_ref` commands a lateral velocity (m/s)."""
-        y = np.array([sense['vz'], sense['wx'], sense['wy'],
-                      sense['roll'], sense['pitch'], sense['height'] - self.h_ref])
-        z_ref = np.zeros(self.na); z_ref[1] = vy_ref
+    def update(self, sense, dt, vy_ref=0.0, vx_ref=0.0, pitch_ref=0.0):
+        """One control step. `vy_ref`/`vx_ref` command lateral/forward velocity (m/s)."""
+        if self.optic_flow:
+            y = np.array([sense['vx'], sense['vy'], sense['vz'], sense['wx'], sense['wy'],
+                          sense['roll'], sense['pitch'], sense['height'] - self.h_ref])
+        else:
+            y = np.array([sense['vz'], sense['wx'], sense['wy'],
+                          sense['roll'], sense['pitch'], sense['height'] - self.h_ref])
+        z_ref = np.zeros(self.na); z_ref[1] = vy_ref; z_ref[0] = vx_ref; z_ref[6] = pitch_ref
         u_ff = np.zeros(3)
         if self.dist_obs:
             for idx, ai in self.dist_idx.items():

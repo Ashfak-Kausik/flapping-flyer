@@ -36,6 +36,8 @@ def strip_distance(pts, surface):
                      unit plane normal pointing TOWARD the flyer."""
     if "type" in surface:
         t = surface["type"]; c = np.asarray(surface.get("center", [0.0, 0.0]), float)
+        if t == "cyl_in_x":         # inside a horizontal tube (axis = x): radial in y,z
+            r = np.hypot(pts[:, 1]-c[0], pts[:, 2]-c[1]); return np.maximum(surface["radius"] - r, 1e-6)
         if t == "cyl_in":           # inside a vertical cylinder (concave curved wall / round tunnel)
             r = np.hypot(pts[:, 0]-c[0], pts[:, 1]-c[1]); return np.maximum(surface["radius"] - r, 1e-6)
         if t == "cyl_out":          # outside a vertical cylinder (convex pillar / rubble chunk)

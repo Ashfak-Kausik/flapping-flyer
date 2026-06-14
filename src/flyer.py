@@ -145,4 +145,5 @@ class Flyer:
         mujoco.mj_objectVelocity(self.model, self.data, mujoco.mjtObj.mjOBJ_BODY,
                                  self.thorax, vel6, 0)
         return dict(pitch=pitch, roll=roll, height=height,
-                    wx=vel6[0], wy=vel6[1], wz=vel6[2], vz=vel6[5])
+                    wx=vel6[0], wy=vel6[1], wz=vel6[2],
+                    vx=vel6[3], vy=vel6[4], vz=vel6[5])
