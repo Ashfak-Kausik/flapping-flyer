@@ -1,0 +1,25 @@
+geometry,true_bearing_deg,recovered_deg,err_deg
+concave tunnel (R=28mm),0,0,0
+concave tunnel (R=28mm),45,29,-16
+concave tunnel (R=28mm),90,89,-1
+concave tunnel (R=28mm),135,151,16
+concave tunnel (R=28mm),180,180,-0
+concave tunnel (R=28mm),225,209,-16
+concave tunnel (R=28mm),270,271,1
+concave tunnel (R=28mm),315,331,16
+convex pillar (R=10mm),0,0,0
+convex pillar (R=10mm),45,26,-19
+convex pillar (R=10mm),90,90,-0
+convex pillar (R=10mm),135,155,20
+convex pillar (R=10mm),180,180,-0
+convex pillar (R=10mm),225,205,-20
+convex pillar (R=10mm),270,270,0
+convex pillar (R=10mm),315,334,19
+tilted wall (35deg),0,0,0
+tilted wall (35deg),45,38,-7
+tilted wall (35deg),90,94,4
+tilted wall (35deg),135,146,11
+tilted wall (35deg),180,180,-0
+tilted wall (35deg),225,214,-11
+tilted wall (35deg),270,266,-4
+tilted wall (35deg),315,322,7
