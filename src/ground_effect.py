@@ -34,6 +34,13 @@ def strip_distance(pts, surface):
       axis-aligned : dict(axis, sign, pos)  -> plane at `pos` along `axis`
       general plane: dict(normal=[nx,ny,nz], point=[px,py,pz])  -> `normal` is the
                      unit plane normal pointing TOWARD the flyer."""
+    if "type" in surface:
+        t = surface["type"]; c = np.asarray(surface.get("center", [0.0, 0.0]), float)
+        if t == "cyl_in":           # inside a vertical cylinder (concave curved wall / round tunnel)
+            r = np.hypot(pts[:, 0]-c[0], pts[:, 1]-c[1]); return np.maximum(surface["radius"] - r, 1e-6)
+        if t == "cyl_out":          # outside a vertical cylinder (convex pillar / rubble chunk)
+            r = np.hypot(pts[:, 0]-c[0], pts[:, 1]-c[1]); return np.maximum(r - surface["radius"], 1e-6)
+        raise ValueError(f"unknown surface type {t}")
     if "normal" in surface:
         n = np.asarray(surface["normal"], float); q = np.asarray(surface["point"], float)
         return np.maximum((pts - q) @ n, 1e-6)
