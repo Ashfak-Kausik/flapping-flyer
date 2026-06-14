@@ -70,7 +70,7 @@ for kge in kge_sweep:
     recs, errs = [], []
     for a in azis:
         wx, wy = raw[kge][a]; rec = recover(wx, wy)
-        err = (rec - a + 180) % 360 - 180; recs.append(rec); errs.append(abs(err))
+        err = (rec - a + 180) % 360 - 180; recs.append(a + err); errs.append(abs(err))
     data[kge] = dict(Sr=Sr, Sp=Sp, recs=recs, mean_err=np.mean(errs))
     print(f" {kge:5.1f}{Sr:8.0f}{Sp:8.0f}{Sr/Sp:6.1f}{np.mean(errs):11.0f}°")
 
