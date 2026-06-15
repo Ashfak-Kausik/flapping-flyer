@@ -20,11 +20,13 @@ Results: forward speed now tracks a command (vs runaway), no lateral drift, alti
 held. A straight round tube is then flown end-to-end by adding lateral roll-centering
 on top of cruise.
 
-HONEST LIMITATION: the cruise+centering loop holds for ~4 s / ~0.3 m, then a slow
-lateral instability grows (the wing nears the wall, ground effect spikes, cruise and
-centering diverge together). So the fly-through is sound for a FINITE tube traversed
-before that point; a robust arbitrary-length tube needs a proper lateral POSITION loop
-(not velocity-nulling) — the next Arc B control task. See outputs/tube_flythrough.mp4.
+LATERAL POSITION LOOP (resolved): velocity-nulling alone (vy_ref = -Kp.delta) was
+underdamped — it centred then slowly drifted into the wall (~5 s). The fix is a proper
+PD: proportional on the proximity delta PLUS rate damping from the optic-flow lateral
+velocity (vy_ref = -Kp.delta - Kd.vy). With Kp=1e-4, Kd=3.0 the flyer holds the tube
+centreline to ~0.2 mm and cruises >1 m with no contact (16 s tested). The optic-flow
+velocity that enabled cruise also supplied the damping the centring had always lacked —
+the same gap seen in the corridor and shaft. See outputs/tube_flythrough.mp4.
 """
 import sys
 from pathlib import Path
@@ -72,18 +74,19 @@ for i in range(int(0.5/fly.dt)):
 bx = ctrl.roll_dist
 ctrl.reset(); fly.reset(kin=kin, height=Z0); fly.x_com[1] = 0.005; st = {'I': 0.0}
 ts, xs, ys, clr = [], [], [], []
-for i in range(int(5.0/fly.dt)):
+for i in range(int(10.0/fly.dt)):
     s = fly.sense()
-    vy = np.clip(-3e-5*(ctrl.roll_dist - bx), -0.08, 0.08)
+    vy = np.clip(-1e-4*(ctrl.roll_dist - bx) - 3.0*s['vy'], -0.10, 0.10)   # PD: proximity + optic-flow damping
     u = cruise_step(s, fly.dt, 0.07, st, vy_ref=vy); kin.set_control(thrust=u[0], roll=u[1], pitch=u[2])
     fly.step(kin, i*fly.dt, surface=SURF)
     if i % int(0.05/fly.dt) == 0:
         rr = np.hypot(fly.x_com[1], fly.x_com[2]-Z0)
         ts.append(i*fly.dt); xs.append(fly.x_com[0]*1e3); ys.append(fly.x_com[1]*1e3); clr.append((Rc-rr-WR)*1e3)
 crash = next((t for t, c in zip(ts, clr) if c < 0), None)
-print(f"\n(B) straight tube R={Rc*1e3:.0f}mm, cruise 0.07 m/s, start 5mm off-centre:")
-print(f" clean traversal to x={max(x for x,c in zip(xs,clr) if c>0):.0f}mm; wall contact at t={crash:.1f}s"
-      if crash else " no contact in window")
+held = max(abs(y) for t, y in zip(ts, ys) if t > 2)
+print(f"\n(B) straight tube R={Rc*1e3:.0f}mm, cruise 0.07 m/s, start 5mm off-centre (PD position loop):")
+print(f" traversed x={xs[-1]:.0f}mm; centreline held to {held:.1f}mm after centring; "
+      + (f"wall contact at t={crash:.1f}s" if crash else "NO wall contact"))
 
 fig, ax = plt.subplots(1, 2, figsize=(12, 4.5))
 ax[0].plot(ts, xs, color="tab:blue"); ax[0].set_xlabel("time (s)"); ax[0].set_ylabel("forward distance (mm)")
