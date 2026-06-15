@@ -85,22 +85,36 @@ The capability the controllability analysis said we lacked, we can now generate.
  
 ---
  
-## Open problem — closing the yaw heading loop (figure D)
+## B4 — Closing the yaw heading loop (was the open problem; now resolved for moderate turns)
  
-The yaw *actuator* works; the yaw *heading controller* does not yet. The actuator result
-(B3) was measured with the flyer **held fixed**, where the cycle-averaged torque is clean.
-In **free flight**, under a constant `u_yaw`, the yaw rate does not ramp like a clean
-integrator — it oscillates ±5–10 rad/s (in both world and body frame) while roll stays
-small. Sign correction, roll-coupling feed-forward, low-pass filtering, and
-cycle-synchronous averaging all failed to tame it; feeding heading back tumbles the flyer.
+The yaw *actuator* (B3) was measured with the flyer **held fixed**; in early free-flight
+tests the yaw rate oscillated and feeding heading back tumbled the flyer, so heading
+control was first logged as unsolved. A yaw-dynamics diagnosis (`e24_yaw_heading.py`)
+resolved it.
  
-The most likely cause is an **aeromechanical feedback** the held-flyer probe cannot see:
-as the body yaws, the wings' relative airflow changes, which alters the split-cycle torque,
-which changes the yaw rate. Resolving it is a focused investigation in its own right —
-characterise the free-flight yaw dynamics (sweep `u_yaw`, log instantaneous yaw torque vs
-body yaw rate to confirm the feedback), then either reshape the yaw actuation to produce
-less oscillatory torque or build a yaw observer that models it. Stated plainly so it is not
-mistaken for a tuning miss: **heading control is unsolved.**
+**Diagnosis — the key insight.** Imposing a steady body yaw rate on a level flapping flyer
+and measuring the cycle-averaged torque gives dTz/dwz ≈ −3.85 µN·mm per rad/s: yaw is
+**naturally well-damped** (time constant ~0.19 s), a stable first-order rate response. A
+constant `u_yaw` settles to a steady turn rate; it does **not** run away. So the
+oscillation was never the yaw physics — it was the controller feeding back a *noisy `wz`
+rate term* for damping that the aerodynamics already provide.
+ 
+**Controller — the fix.** Drop the noisy `wz` feedback and control a **low-pass filtered
+heading** (removing the wingbeat wobble), with: proportional + derivative-of-filtered-
+heading (a clean rate, with natural aero damping doing most of the work); **integral**
+action to reject the small constant yaw cross-coupling the LQG's own roll/pitch commands
+inject (the source of a steady-state error under proportional-only control); a
+**slew-limited** heading reference so `u_yaw` and its roll coupling stay small; and the
+e23 roll-coupling feed-forward (u_roll −= 0.0168·u_yaw).
+ 
+**Result.** Moderate commanded turns track cleanly and stably: +30° → 30.4° (0.4° error),
+max|roll| 0.7°, altitude held. The flyer can now turn to a commanded heading.
+ 
+**Honest remaining edge.** Large sharp turns (90°) reach the neighbourhood but settle short
+and disturb altitude — the bigger maneuver drives more coupling (roll excursion, the ~6%
+lift bump). They need gentler slewing and altitude coordination during the turn. For tunnel
+bends, which are typically gentle, the heading loop is sufficient as-is; sharp 90° turns are
+a logged refinement.
  
 ---
  
@@ -116,6 +130,11 @@ proximity sensor:
  underdamped centring seen since the corridor;
 - can **generate a yaw torque** via split-cycle, removing the uncontrollability that would
  otherwise forbid turning.
-It flies a *straight* round tube end-to-end. It cannot yet fly a *bending* one — that waits
-on the yaw heading controller. The straight-tube fly-through is the honest demonstration of
-Arc B so far; the bend is the next gate, and Arc C (a meshed devastated 3D scene with a start→goal path) builds on it.
+- can **turn to a commanded heading** via split-cycle yaw plus a filtered-heading PI+D
+ loop, after a diagnosis showed yaw is naturally damped and the earlier instability was a
+ noisy-feedback artifact, not the physics.
+It flies a *straight* round tube end-to-end, and it can execute moderate commanded turns.
+The next step is to combine them — a *bending* tube flown by cruise + lateral centering +
+commanded yaw at the bends — which is the demonstration that ties Arc B together and the
+doorway to Arc C (a meshed devastated 3D scene with a start→goal path). Sharp 90° turns
+with full altitude coordination remain a logged refinement.
