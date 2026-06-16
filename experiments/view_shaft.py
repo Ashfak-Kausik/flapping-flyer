@@ -1,7 +1,7 @@
 """
 view_shaft.py — interactive MuJoCo viewer: the flyer centering in a circular shaft.
 
-Run on a machine with a display:  python experiments/view_shaft.py
+Run on a machine with a display:  python3 experiments/view_shaft.py
 
 A vertical round shaft (drawn as a ring of posts; aerodynamically it is the cyl_in
 ground-effect surface, not MuJoCo collisions). The flyer reads the 2D proximity
