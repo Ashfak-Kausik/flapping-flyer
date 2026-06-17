@@ -2,14 +2,17 @@
 src/controller.py — LQG hover controller (Kalman estimator + LQR), with an
 optional disturbance observer for flow-proximity sensing.
 
+
 The hovering flyer is open-loop unstable (e10). We stabilise it with full-state
 feedback, but two of the relevant states are not measured (vx, vy) and the body
 rates carry a large wingbeat ripple. A model-based Kalman filter estimates the
 hidden states and rejects the ripple by trusting the cycle-averaged model over
 the noisy rate measurements. The LQR feeds back the clean estimate.
 
+
 Reduced design state  z = [vx vy vz wx wy roll pitch h]. Measured outputs
 y = [vz wx wy roll pitch h]. Control u = [u_thrust u_roll u_pitch].
+
 
 DISTURBANCE OBSERVER (Stage 6 refinement): augment z with a roll angular-
 acceleration disturbance delta entering the wx equation (wx is index 3):
@@ -27,6 +30,8 @@ from src.kinematics import FlapKinematics
 from src import sysid
 
 
+
+
 def care(A, B, Q, R):
     """Continuous-time algebraic Riccati solve via the Hamiltonian-eigenvector
     method (no scipy). Also yields the Kalman solution via (A^T, C^T, Qk, Rk)."""
@@ -38,9 +43,12 @@ def care(A, B, Q, R):
     P = (U[n:, :] @ np.linalg.inv(U[:n, :])).real
     return 0.5 * (P + P.T)
 
+
 KEEP = [0, 1, 2, 3, 4, 6, 7]          # vx vy vz wx wy roll pitch  (drop wz, yaw)
 MEAS = [2, 3, 4, 5, 6, 7]             # measured rows of the 8-state z
 WX = 3                                # roll-rate index in the 8-state z
+
+
 
 
 class HoverController:
@@ -71,6 +79,7 @@ class HoverController:
         self.dist_states = list(dist_states)
         self.ff = 1.0 if feedforward else 0.0
 
+
         if dist_obs:                                # augment estimator with a disturbance per axis
             na = self.na; ds = self.dist_states; nd = len(ds)
             Aaug = np.zeros((na + nd, na + nd)); Aaug[:na, :na] = Aa
@@ -87,14 +96,18 @@ class HoverController:
             self.L = Pf @ C.T @ np.linalg.inv(np.diag(Rk))
             self.Aa, self.Ba, self.C = Aa, Ba, C
 
+
         self.pitch_trim = pitch_trim; self.h_ref = h_ref; self.u_limit = u_limit
         self.reset()
+
 
     def reset(self):
         self.xh = np.zeros(self.Aa.shape[0])
 
-    def update(self, sense, dt, vy_ref=0.0, vx_ref=0.0, pitch_ref=0.0):
-        """One control step. `vy_ref`/`vx_ref` command lateral/forward velocity (m/s)."""
+
+    def update(self, sense, dt, vy_ref=0.0, vx_ref=0.0, pitch_ref=0.0, roll_ref=0.0):
+        """One control step. `vy_ref`/`vx_ref` command lateral/forward velocity (m/s).
+        `roll_ref` commands a bank angle (rad) — used for coordinated turns."""
         if self.optic_flow:
             y = np.array([sense['vx'], sense['vy'], sense['vz'], sense['wx'], sense['wy'],
                           sense['roll'], sense['pitch'], sense['height'] - self.h_ref])
@@ -102,6 +115,7 @@ class HoverController:
             y = np.array([sense['vz'], sense['wx'], sense['wy'],
                           sense['roll'], sense['pitch'], sense['height'] - self.h_ref])
         z_ref = np.zeros(self.na); z_ref[1] = vy_ref; z_ref[0] = vx_ref; z_ref[6] = pitch_ref
+        z_ref[5] = roll_ref
         u_ff = np.zeros(3)
         if self.dist_obs:
             for idx, ai in self.dist_idx.items():
@@ -112,25 +126,31 @@ class HoverController:
         self.xh = self.xh + dt * (self.Aa @ self.xh + self.Ba @ u + self.L @ (y - self.C @ self.xh))
         return u
 
+
     @property
     def vy_est(self):
         return self.xh[1]
+
 
     @property
     def roll_dist(self):
         """Estimated WALL roll-acceleration disturbance (rad/s^2); sign = side."""
         return self.xh[self.dist_idx[3]] if self.dist_obs and 3 in self.dist_idx else 0.0
 
+
     @property
     def pitch_dist(self):
         """Estimated fore/aft surface pitch-acceleration disturbance (rad/s^2)."""
         return self.xh[self.dist_idx[4]] if self.dist_obs and 4 in self.dist_idx else 0.0
+
 
     @property
     def floor_dist(self):
         """Estimated FLOOR vertical-acceleration disturbance (m/s^2): ground-effect
         lift as an acceleration, = dFz/M. Larger => closer to a surface below."""
         return self.xh[self.dist_idx[2]] if self.dist_obs and 2 in self.dist_idx else 0.0
+
+
 
 
 def design(fly, f_hz=80, feather=45, h_ref=0.05, **kw):
