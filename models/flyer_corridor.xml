@@ -55,8 +55,20 @@
     <light pos="0 0 0.3" dir="0 0 -1" directional="true"
            diffuse="0.7 0.7 0.7"/>
     <geom name="floor" type="plane" size="0 0 0.01" material="groundplane"/>
-    <geom name="wall_R" type="box" pos="0 0.0200 0.05" size="0.10 0.0008 0.06" rgba="0.85 0.45 0.45 0.22" contype="0" conaffinity="0"/>
-    <geom name="wall_L" type="box" pos="0 -0.0200 0.05" size="0.10 0.0008 0.06" rgba="0.45 0.55 0.85 0.22" contype="0" conaffinity="0"/>
+    <geom name="w0" type="box" pos="0.0500 0.0300 0.0400" size="0.0540 0.0020 0.0400" euler="0 0 0.00000" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="w1" type="box" pos="0.0500 -0.0300 0.0400" size="0.0540 0.0020 0.0400" euler="0 0 0.00000" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="w2" type="box" pos="0.0700 0.0450 0.0400" size="0.0490 0.0020 0.0400" euler="0 0 1.57080" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="w3" type="box" pos="0.1300 0.0450 0.0400" size="0.0490 0.0020 0.0400" euler="0 0 1.57080" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="w4" type="box" pos="0.1450 0.1200 0.0400" size="0.0490 0.0020 0.0400" euler="0 0 0.00000" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="w5" type="box" pos="0.1450 0.0600 0.0400" size="0.0490 0.0020 0.0400" euler="0 0 0.00000" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="w6" type="box" pos="0.2014 0.1387 0.0400" size="0.0440 0.0020 0.0400" euler="0 0 0.69813" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="w7" type="box" pos="0.2399 0.0927 0.0400" size="0.0440 0.0020 0.0400" euler="0 0 0.69813" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="w8" type="box" pos="0.2540 0.1913 0.0400" size="0.0440 0.0020 0.0400" euler="0 0 0.87266" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="w9" type="box" pos="0.3000 0.1528 0.0400" size="0.0440 0.0020 0.0400" euler="0 0 0.87266" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="w10" type="box" pos="0.2605 0.1689 0.0400" size="0.0490 0.0020 0.0400" euler="0 0 3.22886" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="w11" type="box" pos="0.2553 0.2287 0.0400" size="0.0490 0.0020 0.0400" euler="0 0 3.22886" rgba="0.62 0.66 0.72 0.5" contype="0" conaffinity="0"/>
+    <geom name="goal" type="cylinder" pos="0.2130 0.1949 0.001" size="0.012 0.001" rgba="0.2 0.85 0.35 0.8" contype="0" conaffinity="0"/>
+    <geom name="goalpost" type="cylinder" pos="0.2130 0.1949 0.030" size="0.0015 0.030" rgba="0.2 0.85 0.35 0.5" contype="0" conaffinity="0"/>
 
     <!-- THORAX (root). Clamped to world for now. Stage 3 -> <freejoint/>.
          Sits 50 mm up so it's clearly above the floor in the viewer. -->
