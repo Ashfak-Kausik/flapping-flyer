@@ -2,17 +2,14 @@
 src/controller.py — LQG hover controller (Kalman estimator + LQR), with an
 optional disturbance observer for flow-proximity sensing.
 
-
 The hovering flyer is open-loop unstable (e10). We stabilise it with full-state
 feedback, but two of the relevant states are not measured (vx, vy) and the body
 rates carry a large wingbeat ripple. A model-based Kalman filter estimates the
 hidden states and rejects the ripple by trusting the cycle-averaged model over
 the noisy rate measurements. The LQR feeds back the clean estimate.
 
-
 Reduced design state  z = [vx vy vz wx wy roll pitch h]. Measured outputs
 y = [vz wx wy roll pitch h]. Control u = [u_thrust u_roll u_pitch].
-
 
 DISTURBANCE OBSERVER (Stage 6 refinement): augment z with a roll angular-
 acceleration disturbance delta entering the wx equation (wx is index 3):
@@ -30,8 +27,6 @@ from src.kinematics import FlapKinematics
 from src import sysid
 
 
-
-
 def care(A, B, Q, R):
     """Continuous-time algebraic Riccati solve via the Hamiltonian-eigenvector
     method (no scipy). Also yields the Kalman solution via (A^T, C^T, Qk, Rk)."""
@@ -44,11 +39,39 @@ def care(A, B, Q, R):
     return 0.5 * (P + P.T)
 
 
+def expm(M):
+    """Matrix exponential via scaling-and-squaring + Taylor series (no scipy)."""
+    M = np.asarray(M, float)
+    nrm = np.abs(M).sum(axis=0).max()
+    s = int(max(0, np.ceil(np.log2(nrm)) + 1)) if nrm > 0 else 0
+    A = M / (2.0 ** s)
+    E = np.eye(M.shape[0]); term = np.eye(M.shape[0])
+    for k in range(1, 18):
+        term = term @ A / k; E = E + term
+    for _ in range(s):
+        E = E @ E
+    return E
+
+
+def dare(A, B, Q, R, iters=20000, tol=1e-11):
+    """Discrete-time algebraic Riccati by value iteration (no scipy). Robust at
+    fast sample rates where eigenvalue methods struggle (poles near |z|=1).
+    P_{k+1} = A'P A - A'P B (R + B'P B)^-1 B'P A + Q,  P_0 = Q, converges to the
+    stabilising solution for (A,B) stabilisable, (A,Q^.5) detectable."""
+    P = np.array(Q, float)
+    for _ in range(iters):
+        BtP = B.T @ P
+        K = np.linalg.solve(R + BtP @ B, BtP @ A)
+        Pn = A.T @ P @ A - (A.T @ P @ B) @ K + Q
+        Pn = 0.5 * (Pn + Pn.T)
+        if np.abs(Pn - P).max() < tol * max(1.0, np.abs(Pn).max()):
+            return Pn
+        P = Pn
+    return P
+
 KEEP = [0, 1, 2, 3, 4, 6, 7]          # vx vy vz wx wy roll pitch  (drop wz, yaw)
 MEAS = [2, 3, 4, 5, 6, 7]             # measured rows of the 8-state z
 WX = 3                                # roll-rate index in the 8-state z
-
-
 
 
 class HoverController:
@@ -57,7 +80,7 @@ class HoverController:
                  Qk=(1, 1, 0.05, 30, 30, 0.02, 0.02, 1e-6),
                  Rk=(1e-3, 100, 100, 1e-4, 1e-4, 1e-7), u_limit=0.6,
                  dist_obs=True, dist_states=(3,), dist_q=2e8, feedforward=False,
-                 optic_flow=False, Rk_of=(1e-2, 1e-2)):
+                 optic_flow=False, Rk_of=(1e-2, 1e-2), control_dt=None):
         nz = len(KEEP)
         Aa = np.zeros((nz + 1, nz + 1)); Aa[:nz, :nz] = A[np.ix_(KEEP, KEEP)]; Aa[nz, 2] = 1.0
         Ba = np.zeros((nz + 1, 3)); Ba[:nz, :] = B[KEEP, :]
@@ -69,8 +92,15 @@ class HoverController:
         for r, idx in enumerate(meas):
             C[r, idx] = 1.0
         # LQR on the 8-state (unchanged): u = -K z
-        P = care(Aa, Ba, np.diag(Q), np.diag(R))
-        self.K = np.linalg.inv(np.diag(R)) @ Ba.T @ P
+        if control_dt is not None:                  # discrete LQR for the actual loop rate (ZOH plant)
+            nz_ = Aa.shape[0]; mz_ = Ba.shape[1]
+            Mca = np.zeros((nz_ + mz_, nz_ + mz_)); Mca[:nz_, :nz_] = Aa; Mca[:nz_, nz_:] = Ba
+            Ed = expm(Mca * control_dt); Ad8 = Ed[:nz_, :nz_]; Bd8 = Ed[:nz_, nz_:]
+            Pd = dare(Ad8, Bd8, np.diag(Q), np.diag(R))
+            self.K = np.linalg.inv(np.diag(R) + Bd8.T @ Pd @ Bd8) @ (Bd8.T @ Pd @ Ad8)
+        else:
+            P = care(Aa, Ba, np.diag(Q), np.diag(R))
+            self.K = np.linalg.inv(np.diag(R)) @ Ba.T @ P
         self.na = Aa.shape[0]                       # 8 physical states
         self.B_roll_accel = Ba[WX, 1]               # roll authority in rad/s^2 per unit
         self.Ba_phys = Ba.copy()                    # 8x3, for feed-forward B lookups
@@ -78,7 +108,6 @@ class HoverController:
         self.dist_obs = dist_obs
         self.dist_states = list(dist_states)
         self.ff = 1.0 if feedforward else 0.0
-
 
         if dist_obs:                                # augment estimator with a disturbance per axis
             na = self.na; ds = self.dist_states; nd = len(ds)
@@ -96,14 +125,12 @@ class HoverController:
             self.L = Pf @ C.T @ np.linalg.inv(np.diag(Rk))
             self.Aa, self.Ba, self.C = Aa, Ba, C
 
-
         self.pitch_trim = pitch_trim; self.h_ref = h_ref; self.u_limit = u_limit
+        self._disc = {}
         self.reset()
-
 
     def reset(self):
         self.xh = np.zeros(self.Aa.shape[0])
-
 
     def update(self, sense, dt, vy_ref=0.0, vx_ref=0.0, pitch_ref=0.0, roll_ref=0.0):
         """One control step. `vy_ref`/`vx_ref` command lateral/forward velocity (m/s).
@@ -123,34 +150,44 @@ class HoverController:
         u = np.clip(-self.K @ (self.xh[:self.na] - z_ref)
                     + np.array([0.0, 0.0, self.pitch_trim]) + u_ff,
                     -self.u_limit, self.u_limit)
-        self.xh = self.xh + dt * (self.Aa @ self.xh + self.Ba @ u + self.L @ (y - self.C @ self.xh))
+        self.xh = self._propagate(self.xh, u, y, dt)
         return u
 
+    def _propagate(self, xh, u, y, dt):
+        """Exact zero-order-hold integration of the estimator ODE
+        xh_dot = (Aa - L C) xh + [Ba  L] [u; y], via the matrix exponential.
+        Stable at any control rate, unlike forward Euler. Cached per dt."""
+        key = round(float(dt), 10)
+        if key not in self._disc:
+            n = self.Aa.shape[0]
+            M = self.Aa - self.L @ self.C
+            G = np.hstack([self.Ba, self.L])          # inputs are [u; y]
+            m = G.shape[1]
+            Maug = np.zeros((n + m, n + m)); Maug[:n, :n] = M; Maug[:n, n:] = G
+            E = expm(Maug * dt)
+            self._disc[key] = (E[:n, :n], E[:n, n:])
+        Ad, Bd = self._disc[key]
+        return Ad @ xh + Bd @ np.concatenate([u, y])
 
     @property
     def vy_est(self):
         return self.xh[1]
-
 
     @property
     def roll_dist(self):
         """Estimated WALL roll-acceleration disturbance (rad/s^2); sign = side."""
         return self.xh[self.dist_idx[3]] if self.dist_obs and 3 in self.dist_idx else 0.0
 
-
     @property
     def pitch_dist(self):
         """Estimated fore/aft surface pitch-acceleration disturbance (rad/s^2)."""
         return self.xh[self.dist_idx[4]] if self.dist_obs and 4 in self.dist_idx else 0.0
-
 
     @property
     def floor_dist(self):
         """Estimated FLOOR vertical-acceleration disturbance (m/s^2): ground-effect
         lift as an acceleration, = dFz/M. Larger => closer to a surface below."""
         return self.xh[self.dist_idx[2]] if self.dist_obs and 2 in self.dist_idx else 0.0
-
-
 
 
 def design(fly, f_hz=80, feather=45, h_ref=0.05, **kw):
