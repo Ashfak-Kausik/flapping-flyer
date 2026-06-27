@@ -7,7 +7,6 @@ reaches the finish pad.
     stop-and-pivot only if fully boxed in).
   WING-WASH (ctrl.roll_dist): aerodynamic self-effect off the side walls keeps it centered.
 
-
 To make the course LONGER for a harder test, just change SCALE (e.g. SCALE=3.0 tripls every
 segment). Walls, finish pad, and the run timeout all scale automatically.
 Run:  python experiments/e36_reactive_course.py      (saves outputs/e36_reactive_course.png)
@@ -17,25 +16,23 @@ sys.path.insert(0, '.')
 from src.flyer import Flyer
 from src.controller import design
 from src.antenna import Antenna, BIG
+from src.safety import Clearance, WINGREACH
 from experiments.e31_corner import bodyframe
 
-
 Vc=0.05; Kc=1.5e-5; Kd=3.0; KLAT=3.0; ROLL_FF=175.0/10399.0
-YAWRATE=0.5; Ksteer=5.0; STOP=0.042; CLEAR=0.090; FMAX=0.11; SAFE=0.013
+YAWRATE=0.5; Ksteer=5.0; STOP=0.042; CLEAR=0.090; FMAX=0.11
+SAFE_BUF=0.020; KVEER=0.9   # clearance-aware safety: veer/slow when a wall is within 20mm
 PAD=0.006; CRUISE=0.05; DESC_RATE=0.014; WALL_H=0.080; Wd=0.064
 FIN_PAD=0.028          # finish pad radius (visible green disk)
 FIN_ZONE=0.034         # land when the flyer reactively reaches within this of the finish
-
 
 SCALE=3.0              # <-- set to 3.0 for a course with every segment tripled
 CPTS=np.array([[0,0],[0.055,0],[0.055,0.065],[0.120,0.065],[0.176,0.098],[0.206,0.046]])*SCALE
 FINISH=CPTS[-1]
 
-
 def path_length(pts=None):
     p=CPTS if pts is None else pts
     return float(sum(np.linalg.norm(p[i+1]-p[i]) for i in range(len(p)-1)))
-
 
 def _miter(pts,W):
     d=[(pts[i+1]-pts[i])/np.linalg.norm(pts[i+1]-pts[i]) for i in range(len(pts)-1)]
@@ -50,7 +47,6 @@ def _miter(pts,W):
         nrm.append(n)
     return pts+(W/2)*np.array(nrm), pts-(W/2)*np.array(nrm)
 
-
 def wall_boxes(pts=None,W=Wd,step=0.007,hs=0.005):
     """Dense overlapping blocks along each offset wall line -> guaranteed gap-free."""
     pts=CPTS if pts is None else pts
@@ -64,7 +60,6 @@ def wall_boxes(pts=None,W=Wd,step=0.007,hs=0.005):
                 p=a+(k/n)*v; boxes.append((p[0],p[1],hs))
     return boxes
 
-
 def build_model(path="models/_reactive_course.xml"):
     xml=open("models/flyer.xml").read()
     g="".join(f'    <geom name="cw{i}" type="box" pos="{cx:.4f} {cy:.4f} {WALL_H/2:.4f}" '
@@ -76,17 +71,14 @@ def build_model(path="models/_reactive_course.xml"):
     key='<geom name="floor" type="plane" size="0 0 0.01" material="groundplane"/>\n'
     open(path,"w").write(xml.replace(key,key+g)); return path
 
-
 def planes(psi,pos,dL,dR):
     lat=np.array([-np.sin(psi),np.cos(psi)]); P=[]
     if dL<BIG: q=pos[:2]+dL*lat; P.append(dict(normal=[-lat[0],-lat[1],0],point=[q[0],q[1],0]))
     if dR<BIG: q=pos[:2]-dR*lat; P.append(dict(normal=[ lat[0], lat[1],0],point=[q[0],q[1],0]))
     return P
 
-
 def run_timeout():
     return path_length()/Vc*2.2 + 14.0     # generous; scales with course length
-
 
 def run(do_takeoff=True, tmax=None):
     if tmax is None: tmax=run_timeout()
@@ -95,25 +87,32 @@ def run(do_takeoff=True, tmax=None):
     ctrl.K[:,0]=0.0; ctrl.K[:,1]=0.0
     h0=PAD if do_takeoff else CRUISE
     ctrl.reset(); fly.reset(kin=kin,height=h0); ctrl.h_ref=h0
-    ant=Antenna(fly)
+    ant=Antenna(fly); clr=Clearance(fly); minc=1e3; minc_at=(0.0,0.0); crashed=False
     t=0.0; I_s=0.0; href=h0; pref=0.0; nose_f=nose_prev=I_y=0.0; rd_f=0.0; thr_f=None
     phase="TAKEOFF" if do_takeoff else "NAV"; state="CRUISE"; tdir=0; turn0=None; log=[]; ev=[]
     while t<tmax:
         s=fly.sense(); psi=s['yaw']; x,y,z=fly.x_com; spd=np.hypot(s['vx'],s['vy'])
         b=bodyframe(s); u_fwd=b['vx']; v_lat=b['vy']
         nose_f+=((psi-nose_f+np.pi)%(2*np.pi)-np.pi)*fly.dt/0.04; nrate=(nose_f-nose_prev)/fly.dt; nose_prev=nose_f
-        fwd,fL,fR,dL,dR=ant.feel([0,30,-30,90,-90]); rd=ctrl.roll_dist; rd_f+=(rd-rd_f)*fly.dt/0.10
+        f0,fLp,fRp,f50p,f50m,dL,dR=ant.feel([0,30,-30,50,-50,90,-90]); fwd,fL,fR=f0,fLp,fRp
+        rd=ctrl.roll_dist; rd_f+=(rd-rd_f)*fly.dt/0.10
         pl=planes(psi,fly.x_com,dL,dR); thrust_extra=0.0; dist_fin=np.hypot(FINISH[0]-x,FINISH[1]-y)
+        left_near=min(f50p,dL); right_near=min(f50m,dR)   # nearest wall each side (diagonal + perpendicular)
         safe=0.0
-        if dR<SAFE: safe+=0.6*(SAFE-dR)/SAFE
-        if dL<SAFE: safe-=0.6*(SAFE-dL)/SAFE
+        if right_near<SAFE_BUF: safe+=KVEER*(SAFE_BUF-right_near)/SAFE_BUF
+        if left_near <SAFE_BUF: safe-=KVEER*(SAFE_BUF-left_near)/SAFE_BUF
+        slow=0.35 if min(left_near,right_near)<SAFE_BUF else 1.0
+        if phase=="NAV" and int(t/0.02)!=int((t-fly.dt)/0.02):
+            c=clr.min_clearance()
+            if c<minc: minc=c; minc_at=(x*1e3,y*1e3)
+            if c<WINGREACH: crashed=True
         if phase=="TAKEOFF":
             href=min(href+0.025*fly.dt,CRUISE); Vcmd=0.0; roll_ref=np.clip(-KLAT*v_lat,-np.radians(2),np.radians(2))
             if z>=CRUISE-0.003 and t>1.0: phase="NAV"; ev.append((round(t,1),"airborne -> navigating"))
         elif phase=="NAV":
             href=CRUISE
             if state=="CRUISE":
-                Vcmd=Vc*np.clip((fwd-STOP)/0.04,0.0,1.0)*(0.4 if abs(safe)>0 else 1.0)
+                Vcmd=Vc*np.clip((fwd-STOP)/0.04,0.0,1.0)*slow
                 pref+= (np.clip(Ksteer*(min(fL,FMAX)-min(fR,FMAX)),-0.5,0.5)+safe)*fly.dt
                 roll_ref=np.clip(-Kc*rd_f-Kd*v_lat,-np.radians(2.5),np.radians(2.5))
                 if fwd<STOP and min(fL,fR)<STOP and spd<0.03:
@@ -139,8 +138,7 @@ def run(do_takeoff=True, tmax=None):
         fly.step(kin,t,surface=(pl+[dict(axis=2,sign=1,pos=0.0)]))
         log.append([t,x*1e3,y*1e3,z*1e3,np.degrees(psi),0 if state=="CRUISE" else 1,{"TAKEOFF":0,"NAV":1,"LAND":2}.get(phase,1)]); t+=fly.dt
         if phase=="LAND" and z<0.012 and abs(s['vz'])<0.01 and t>ev[-1][0]+0.8: break
-    return np.array(log), ev
-
+    return np.array(log), ev, dict(min_clearance_mm=minc*1e3, min_clearance_at=minc_at, crashed=crashed)
 
 def make_figure(L, path="outputs/e36_reactive_course.png"):
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
@@ -157,11 +155,12 @@ def make_figure(L, path="outputs/e36_reactive_course.png"):
     ax.set_title(f"Reactive course (SCALE={SCALE}): felt its way through, no memorized route, no shortcut")
     fig.tight_layout(); fig.savefig(path,dpi=120); print("saved ->",path)
 
-
 if __name__=="__main__":
     print(f"SCALE={SCALE}  path length={path_length()*1e3:.0f}mm  timeout={run_timeout():.0f}s")
-    L,ev=run(do_takeoff=True)
+    L,ev,safety=run(do_takeoff=True)
     print("what it felt and did:")
     for tt,msg in ev: print(f"  {tt:.1f}s  {msg}")
     print(f"final ({L[-1,1]:.0f},{L[-1,2]:.0f})mm z {L[-1,3]:.1f}mm; finish ({FINISH[0]*1e3:.0f},{FINISH[1]*1e3:.0f})mm")
+    print(f"SAFETY: min wall clearance {safety['min_clearance_mm']:.1f}mm at {tuple(round(v) for v in safety['min_clearance_at'])} "
+          f"(wingtip threshold {WINGREACH*1e3:.1f}mm) -> {'CRASH' if safety['crashed'] else 'no contact'}")
     np.savez("outputs/e36_reactive_course.npz",L=L); make_figure(L)

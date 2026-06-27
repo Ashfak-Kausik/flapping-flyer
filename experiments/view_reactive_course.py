@@ -20,6 +20,7 @@ from src.antenna import Antenna, BIG
 from experiments.e31_corner import bodyframe
 import experiments.e36_reactive_course as e
 
+SAFE_BUF=0.020; KVEER=0.9
 SLOWMO = 0.12          # 0.12 = ~8x slower than real time
 PAUSE_AT_FINISH = 2.5  # seconds to sit landed on the pad before looping
 TIMEOUT = e.run_timeout()   # scales with course length
@@ -50,17 +51,19 @@ def step():
     b = bodyframe(s); u_fwd = b['vx']; v_lat = b['vy']
     m.nose_f += ((psi - m.nose_f + np.pi) % (2 * np.pi) - np.pi) * fly.dt / 0.04
     nrate = (m.nose_f - m.nose_prev) / fly.dt; m.nose_prev = m.nose_f
-    fwd, fL, fR, dL, dR = ant.feel([0, 30, -30, 90, -90])
+    f0, fLp, fRp, f50p, f50m, dL, dR = ant.feel([0, 30, -30, 50, -50, 90, -90]); fwd, fL, fR = f0, fLp, fRp
     rd = ctrl.roll_dist; m.rd_f += (rd - m.rd_f) * fly.dt / 0.10
     pl = e.planes(psi, fly.x_com, dL, dR)
     dist_fin = np.hypot(e.FINISH[0] - x, e.FINISH[1] - y)
 
     if m.phase == "NAV":
+        left_near = min(f50p, dL); right_near = min(f50m, dR)
         safe = 0.0
-        if dR < e.SAFE: safe += 0.6 * (e.SAFE - dR) / e.SAFE
-        if dL < e.SAFE: safe -= 0.6 * (e.SAFE - dL) / e.SAFE
+        if right_near < SAFE_BUF: safe += KVEER * (SAFE_BUF - right_near) / SAFE_BUF
+        if left_near  < SAFE_BUF: safe -= KVEER * (SAFE_BUF - left_near) / SAFE_BUF
+        slow = 0.35 if min(left_near, right_near) < SAFE_BUF else 1.0
         if m.state == "CRUISE":
-            Vcmd = e.Vc * np.clip((fwd - e.STOP) / 0.04, 0.0, 1.0) * (0.4 if abs(safe) > 0 else 1.0)
+            Vcmd = e.Vc * np.clip((fwd - e.STOP) / 0.04, 0.0, 1.0) * slow
             m.pref += (np.clip(e.Ksteer * (min(fL, e.FMAX) - min(fR, e.FMAX)), -0.5, 0.5) + safe) * fly.dt
             roll_ref = np.clip(-e.Kc * m.rd_f - e.Kd * v_lat, -np.radians(2.5), np.radians(2.5))
             if fwd < e.STOP and min(fL, fR) < e.STOP and spd < 0.03:
