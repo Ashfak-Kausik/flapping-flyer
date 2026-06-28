@@ -1,0 +1,306 @@
+<mujoco model="flapping_flyer">
+  <!-- ===================================================================
+       STAGE 1 (rebuild) — BIO-INSPIRED BODY
+       Mosquito-inspired micro-flyer. Units: meters, kilograms, seconds.
+       Justified in docs/01_body_model.md.
+
+       Design intent (function-faithful, not art-faithful):
+         - slender 3-region body: head + thorax (mass forward) + thin tail
+         - mass concentrated FORWARD, just below the wing hinges
+           -> centre of mass sits below+near the wing base (pendulum-stable)
+         - ONE wing pair on the thorax (Diptera), elongated-oval planform,
+           area biased slightly outboard (Li & Nabawy 2022)
+         - halteres: tiny nubs, present for looks now, EARMARKED to become the
+           rotation-rate sensor (biological gyroscope) in the control stage
+         - NO legs, NO abdomen segments  -> no wasted mass, no extra DOF
+
+       Frame convention (anatomical):
+         +x = forward (head)   ;   y = left/right span   ;   +z = up
+         stroke hinge axis = z (vertical) -> wing sweeps fore/aft
+         pitch  hinge axis = y (span)     -> wing feathers / flips
+
+       GEOMETRY + MASS + JOINTS only. No aerodynamics (we inject it, Stage 2).
+       =================================================================== -->
+
+  <option timestep="1e-4" gravity="0 0 -9.81" integrator="implicitfast"/>
+  <!-- implicitfast: handles joint damping / actuators stably at this timestep,
+       so the model does NOT blow up when the viewer auto-runs (the NaN you saw
+       came from a stiff servo under the old explicit RK4 integrator). -->
+
+  <!-- ===================== VISUALS (menagerie look) ===================== -->
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20" offwidth="1280" offheight="960"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0"
+             width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge"
+             rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8"
+             width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true"
+              texrepeat="5 5" reflectance="0.2"/>
+    <material name="thorax_mat" rgba="0.25 0.25 0.28 1"/>
+    <material name="wing_mat"   rgba="0.55 0.62 0.70 0.45"/>
+  </asset>
+
+  <default>
+    <joint damping="1e-8" armature="0"/>
+    <geom density="1200"/>
+  </default>
+
+  <worldbody>
+    <light pos="0 0 0.3" dir="0 0 -1" directional="true"
+           diffuse="0.7 0.7 0.7"/>
+    <geom name="floor" type="plane" size="0 0 0.01" material="groundplane"/>
+    <geom name="bw0" type="box" pos="0.0000 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw1" type="box" pos="0.0069 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw2" type="box" pos="0.0138 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw3" type="box" pos="0.0208 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw4" type="box" pos="0.0277 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw5" type="box" pos="0.0346 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw6" type="box" pos="0.0415 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw7" type="box" pos="0.0485 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw8" type="box" pos="0.0554 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw9" type="box" pos="0.0623 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw10" type="box" pos="0.0692 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw11" type="box" pos="0.0762 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw12" type="box" pos="0.0831 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw13" type="box" pos="0.0900 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw14" type="box" pos="0.0969 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw15" type="box" pos="0.1038 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw16" type="box" pos="0.1108 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw17" type="box" pos="0.1177 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw18" type="box" pos="0.1246 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw19" type="box" pos="0.1315 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw20" type="box" pos="0.1385 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw21" type="box" pos="0.1454 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw22" type="box" pos="0.1523 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw23" type="box" pos="0.1592 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw24" type="box" pos="0.1662 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw25" type="box" pos="0.1731 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw26" type="box" pos="0.1800 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw27" type="box" pos="0.1800 0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw28" type="box" pos="0.1860 0.0353 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw29" type="box" pos="0.1920 0.0386 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw30" type="box" pos="0.1980 0.0419 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw31" type="box" pos="0.2040 0.0453 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw32" type="box" pos="0.2100 0.0486 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw33" type="box" pos="0.2160 0.0519 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw34" type="box" pos="0.2220 0.0552 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw35" type="box" pos="0.2280 0.0585 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw36" type="box" pos="0.2340 0.0618 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw37" type="box" pos="0.2400 0.0651 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw38" type="box" pos="0.2460 0.0684 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw39" type="box" pos="0.2520 0.0718 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw40" type="box" pos="0.2580 0.0751 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw41" type="box" pos="0.2641 0.0784 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw42" type="box" pos="0.2701 0.0817 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw43" type="box" pos="0.2761 0.0850 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw44" type="box" pos="0.2821 0.0883 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw45" type="box" pos="0.2881 0.0916 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw46" type="box" pos="0.2941 0.0950 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw47" type="box" pos="0.3001 0.0983 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw48" type="box" pos="0.3061 0.1016 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw49" type="box" pos="0.3121 0.1049 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw50" type="box" pos="0.3181 0.1082 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw51" type="box" pos="0.3241 0.1115 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw52" type="box" pos="0.3301 0.1148 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw53" type="box" pos="0.3361 0.1181 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw54" type="box" pos="0.3421 0.1215 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw55" type="box" pos="0.3481 0.1248 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw56" type="box" pos="0.3541 0.1281 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw57" type="box" pos="0.3601 0.1314 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw58" type="box" pos="0.3661 0.1347 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw59" type="box" pos="0.3721 0.1380 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw60" type="box" pos="0.3781 0.1413 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw61" type="box" pos="0.3841 0.1447 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw62" type="box" pos="0.3901 0.1480 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw63" type="box" pos="0.0000 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw64" type="box" pos="0.0069 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw65" type="box" pos="0.0138 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw66" type="box" pos="0.0208 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw67" type="box" pos="0.0277 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw68" type="box" pos="0.0346 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw69" type="box" pos="0.0415 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw70" type="box" pos="0.0485 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw71" type="box" pos="0.0554 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw72" type="box" pos="0.0623 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw73" type="box" pos="0.0692 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw74" type="box" pos="0.0762 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw75" type="box" pos="0.0831 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw76" type="box" pos="0.0900 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw77" type="box" pos="0.0969 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw78" type="box" pos="0.1038 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw79" type="box" pos="0.1108 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw80" type="box" pos="0.1177 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw81" type="box" pos="0.1246 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw82" type="box" pos="0.1315 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw83" type="box" pos="0.1385 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw84" type="box" pos="0.1454 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw85" type="box" pos="0.1523 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw86" type="box" pos="0.1592 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw87" type="box" pos="0.1662 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw88" type="box" pos="0.1731 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw89" type="box" pos="0.1800 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw90" type="box" pos="0.1800 -0.0320 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw91" type="box" pos="0.1860 -0.0353 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw92" type="box" pos="0.1920 -0.0386 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw93" type="box" pos="0.1980 -0.0419 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw94" type="box" pos="0.2040 -0.0453 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw95" type="box" pos="0.2100 -0.0486 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw96" type="box" pos="0.2160 -0.0519 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw97" type="box" pos="0.2220 -0.0552 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw98" type="box" pos="0.2280 -0.0585 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw99" type="box" pos="0.2340 -0.0618 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw100" type="box" pos="0.2400 -0.0651 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw101" type="box" pos="0.2460 -0.0684 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw102" type="box" pos="0.2520 -0.0718 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw103" type="box" pos="0.2580 -0.0751 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw104" type="box" pos="0.2641 -0.0784 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw105" type="box" pos="0.2701 -0.0817 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw106" type="box" pos="0.2761 -0.0850 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw107" type="box" pos="0.2821 -0.0883 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw108" type="box" pos="0.2881 -0.0916 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw109" type="box" pos="0.2941 -0.0950 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw110" type="box" pos="0.3001 -0.0983 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw111" type="box" pos="0.3061 -0.1016 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw112" type="box" pos="0.3121 -0.1049 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw113" type="box" pos="0.3181 -0.1082 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw114" type="box" pos="0.3241 -0.1115 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw115" type="box" pos="0.3301 -0.1148 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw116" type="box" pos="0.3361 -0.1181 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw117" type="box" pos="0.3421 -0.1215 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw118" type="box" pos="0.3481 -0.1248 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw119" type="box" pos="0.3541 -0.1281 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw120" type="box" pos="0.3601 -0.1314 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw121" type="box" pos="0.3661 -0.1347 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw122" type="box" pos="0.3721 -0.1380 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw123" type="box" pos="0.3781 -0.1413 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw124" type="box" pos="0.3841 -0.1447 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw125" type="box" pos="0.3901 -0.1480 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw126" type="box" pos="0.4202 0.0915 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw127" type="box" pos="0.4140 0.0882 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw128" type="box" pos="0.4079 0.0849 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw129" type="box" pos="0.4017 0.0817 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw130" type="box" pos="0.3956 0.0784 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw131" type="box" pos="0.3895 0.0751 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw132" type="box" pos="0.3833 0.0719 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw133" type="box" pos="0.3772 0.0686 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw134" type="box" pos="0.3710 0.0653 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw135" type="box" pos="0.3649 0.0621 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw136" type="box" pos="0.3587 0.0588 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw137" type="box" pos="0.3526 0.0555 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw138" type="box" pos="0.3465 0.0523 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw139" type="box" pos="0.3403 0.0490 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw140" type="box" pos="0.3342 0.0457 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw141" type="box" pos="0.3280 0.0425 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw142" type="box" pos="0.3219 0.0392 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw143" type="box" pos="0.3157 0.0359 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw144" type="box" pos="0.3096 0.0327 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw145" type="box" pos="0.3035 0.0294 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw146" type="box" pos="0.2973 0.0261 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw147" type="box" pos="0.2912 0.0229 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw148" type="box" pos="0.2850 0.0196 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw149" type="box" pos="0.2789 0.0163 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw150" type="box" pos="0.2727 0.0131 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw151" type="box" pos="0.2666 0.0098 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw152" type="box" pos="0.2604 0.0065 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw153" type="box" pos="0.2543 0.0033 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw154" type="box" pos="0.2482 0.0000 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw155" type="box" pos="0.2482 0.0000 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw156" type="box" pos="0.2543 -0.0033 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw157" type="box" pos="0.2604 -0.0065 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw158" type="box" pos="0.2666 -0.0098 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw159" type="box" pos="0.2727 -0.0131 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw160" type="box" pos="0.2789 -0.0163 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw161" type="box" pos="0.2850 -0.0196 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw162" type="box" pos="0.2912 -0.0229 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw163" type="box" pos="0.2973 -0.0261 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw164" type="box" pos="0.3035 -0.0294 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw165" type="box" pos="0.3096 -0.0327 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw166" type="box" pos="0.3157 -0.0359 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw167" type="box" pos="0.3219 -0.0392 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw168" type="box" pos="0.3280 -0.0425 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw169" type="box" pos="0.3342 -0.0457 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw170" type="box" pos="0.3403 -0.0490 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw171" type="box" pos="0.3465 -0.0523 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw172" type="box" pos="0.3526 -0.0555 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw173" type="box" pos="0.3587 -0.0588 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw174" type="box" pos="0.3649 -0.0621 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw175" type="box" pos="0.3710 -0.0653 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw176" type="box" pos="0.3772 -0.0686 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw177" type="box" pos="0.3833 -0.0719 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw178" type="box" pos="0.3895 -0.0751 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw179" type="box" pos="0.3956 -0.0784 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw180" type="box" pos="0.4017 -0.0817 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw181" type="box" pos="0.4079 -0.0849 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw182" type="box" pos="0.4140 -0.0882 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="bw183" type="box" pos="0.4202 -0.0915 0.0400" size="0.0050 0.0050 0.0400" group="3" rgba="0.62 0.66 0.72 1" contype="0" conaffinity="0"/>
+    <geom name="fin0" type="cylinder" pos="0.4052 0.1197 0.001" size="0.0280 0.001" rgba="0.2 0.85 0.35 0.85" group="2" contype="0" conaffinity="0"/>
+    <geom name="fin1" type="cylinder" pos="0.4052 -0.1197 0.001" size="0.0280 0.001" rgba="0.2 0.85 0.35 0.85" group="2" contype="0" conaffinity="0"/>
+
+    <!-- THORAX (root). Clamped to world for now. Stage 3 -> <freejoint/>.
+         Sits 50 mm up so it's clearly above the floor in the viewer. -->
+    <body name="thorax" pos="0 0 0.05">
+
+      <!-- main flight mass: thorax block, just below the wing hinges -->
+      <geom name="thorax_g" type="ellipsoid" pos="0.001 0 0"
+            size="0.0020 0.0012 0.0012" mass="60e-6" material="thorax_mat"/>
+      <!-- head: small, forward -->
+      <geom name="head_g" type="sphere" pos="0.0040 0 0"
+            size="0.0008" mass="3e-6" material="thorax_mat"/>
+      <!-- abdomen / tail: long, THIN, LIGHT, trailing aft. Tapered ellipsoid
+           reads as an abdomen and gives a little aft area for pitch stability
+           at almost no mass cost. -->
+      <geom name="tail_g" type="ellipsoid" pos="-0.0055 0 0"
+            size="0.0050 0.0006 0.0006" mass="12e-6" material="thorax_mat"/>
+
+      <!-- halteres: tiny nubs just behind the wing bases. Visual now,
+           EARMARKED as the future rate sensor. Mass ~0.1 mg each (negligible). -->
+      <geom name="haltere_R" type="capsule" fromto="-0.0008 0.0007 0  -0.0016 0.0016 -0.0004"
+            size="0.00012" mass="1e-7" material="thorax_mat"/>
+      <geom name="haltere_L" type="capsule" fromto="-0.0008 -0.0007 0  -0.0016 -0.0016 -0.0004"
+            size="0.00012" mass="1e-7" material="thorax_mat"/>
+
+      <!-- ============ RIGHT WING (extends +y) ============
+           shoulder above & right of the thorax centre -->
+      <body name="stroke_R" pos="0 0.0010 0.0012">
+        <joint name="stroke_R" type="hinge" axis="0 0 1" range="-90 90" armature="1e-8"/>
+        <inertial pos="0 0 0" mass="1e-7" diaginertia="1e-13 1e-13 1e-13"/>
+        <body name="wing_R" pos="0 0 0">
+          <joint name="pitch_R" type="hinge" axis="0 1 0" range="-120 120" armature="1e-8"/>
+          <!-- elongated-oval wing: span along y, chord along x, thin in z.
+               centre pushed to 0.55*R outboard (higher radial centroid),
+               and shifted -c/4 in x so the PITCH AXIS is at the quarter-chord. -->
+          <geom name="wing_R_g" type="ellipsoid" pos="-0.000875 0.0066 0"
+                size="0.00175 0.0060 0.000025" material="wing_mat"
+                mass="1.0e-6"/>
+        </body>
+      </body>
+
+      <!-- ============ LEFT WING (extends -y) ============ -->
+      <body name="stroke_L" pos="0 -0.0010 0.0012">
+        <joint name="stroke_L" type="hinge" axis="0 0 1" range="-90 90" armature="1e-8"/>
+        <inertial pos="0 0 0" mass="1e-7" diaginertia="1e-13 1e-13 1e-13"/>
+        <body name="wing_L" pos="0 0 0">
+          <joint name="pitch_L" type="hinge" axis="0 1 0" range="-120 120" armature="1e-8"/>
+          <geom name="wing_L_g" type="ellipsoid" pos="-0.000875 -0.0066 0"
+                size="0.00175 0.0060 0.000025" material="wing_mat"
+                mass="1.0e-6"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <!-- Position actuators on the four hinges. Gains kept gentle so they are
+       stable under implicitfast; Stage 2 may instead PRESCRIBE kinematics. -->
+  <actuator>
+    <position name="a_stroke_R" joint="stroke_R" kp="0.01" kv="1e-5"/>
+    <position name="a_pitch_R"  joint="pitch_R"  kp="0.01" kv="1e-5"/>
+    <position name="a_stroke_L" joint="stroke_L" kp="0.01" kv="1e-5"/>
+    <position name="a_pitch_L"  joint="pitch_L"  kp="0.01" kv="1e-5"/>
+  </actuator>
+</mujoco>
