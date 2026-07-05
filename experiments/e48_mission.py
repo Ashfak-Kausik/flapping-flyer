@@ -29,6 +29,8 @@ CRUISE=e.CRUISE; Vc=e.Vc; Kc=e.Kc; Kd=e.Kd; KLAT=e.KLAT; Ksteer=e.Ksteer; FMAX=e
 STOP=e.STOP; CLEAR=e.CLEAR; SAFE_BUF=e.SAFE_BUF; KVEER=e.KVEER; YAWRATE=e.YAWRATE
 ROLL_FF=e.ROLL_FF; FIN_ZONE=e.FIN_ZONE
 GAP_THRESH=e40.GAP_THRESH; KFOLLOW=e40.KFOLLOW; STANDOFF=e40.STANDOFF
+MIN_SPAN=0.003            # open-span floor: filters single-tick glitches but passes real openings
+                          # down to ~15mm (raw span ~5mm); adrift FPs are killed by the opposite-wall gate, not this.
 SIZE_OFFSET_MM=16.0                      # e45 feeler-edge calibration: true ~ detected + 16mm
 _TRACE=None                              # set to a list to capture per-control-step diagnostics
 def _wrap(a): return (a+np.pi)%(2*np.pi)-np.pi
@@ -45,7 +47,7 @@ def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None):
     tmax=(plen/Vc*3.0+16 if tmax is None else tmax)
     t=0.0; si=0; state="CRUISE"; tdir=0; turn0=None; pref=0.0; nose_f=nose_prev=0.0; I_s=I_y=0.0; rd_f=0.0
     minc=1e3; crashed=False; reached=None; traj=[]; pl=[]; floor=dict(axis=2,sign=1,pos=0.0)
-    openL=openR=False; onL=onR=None; detected=[]; latch=None
+    openL=openR=False; onL=onR=None; onLx=onRx=None; detected=[]; latch=None
     while t<tmax:
         if si%N==0:
             s=nm.sense(fly.sense()); psi=s['yaw']; x,y,z=fly.x_com; b=bodyframe(s); v_lat=b['vy']
@@ -61,11 +63,20 @@ def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None):
             # ---- breach logger: project onto the open-side wall (perp offset = closed-side feeler) ----
             perp=np.array([-np.sin(nose_f), np.cos(nose_f)])   # left normal of heading
             def _proj(sign, dclosed): return (np.array([x,y])+sign*min(dclosed,0.05)*perp)
+            # a breach = ONE wall open while the OPPOSITE wall is intact (a gap in a real corridor);
+            # both-open (adrift/open space) or transient toggles at turns must not log.
+            Lb = gapL and (not gapR); Rb = gapR and (not gapL)
             if state=="CRUISE" and fclear:
-                if gapL and not openL: openL=True; onL=_proj(+1,dR)
-                if (not gapL) and openL: openL=False; detected.append(('L',onL,_proj(+1,dR)))
-                if gapR and not openR: openR=True; onR=_proj(-1,dL)
-                if (not gapR) and openR: openR=False; detected.append(('R',onR,_proj(-1,dL)))
+                if Lb and not openL: openL=True; onL=_proj(+1,dR); onLx=np.array([x,y])
+                if (not Lb) and openL:
+                    openL=False
+                    if np.linalg.norm(np.array([x,y])-onLx)>MIN_SPAN: detected.append(('L',onL,_proj(+1,dR) if not gapR else (x,y)))
+                if Rb and not openR: openR=True; onR=_proj(-1,dL); onRx=np.array([x,y])
+                if (not Rb) and openR:
+                    openR=False
+                    if np.linalg.norm(np.array([x,y])-onRx)>MIN_SPAN: detected.append(('R',onR,_proj(-1,dL) if not gapL else (x,y)))
+            else:                                          # left CRUISE (turn) or forward blocked: close cleanly, no logging
+                openL=openR=False
             # ---- state machine ----
             if state=="CRUISE":
                 Vcmd=Vc*np.clip((fwd-STOP)/0.04,0.0,1.0)*slow
@@ -100,8 +111,8 @@ def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None):
         if np.hypot(fin[0]-x,fin[1]-y)<FIN_ZONE: reached='finish'; break
         if z<0.0 or z>0.2: reached='fell'; break
         t+=fly.dt; si+=1
-    if openL: detected.append(('L',onL,(x,y)))
-    if openR: detected.append(('R',onR,(x,y)))
+    if openL and onLx is not None and np.linalg.norm(np.array([x,y])-onLx)>MIN_SPAN: detected.append(('L',onL,(x,y)))
+    if openR and onRx is not None and np.linalg.norm(np.array([x,y])-onRx)>MIN_SPAN: detected.append(('R',onR,(x,y)))
     return dict(reached=reached, crashed=crashed, min_clear_mm=minc*1e3, t=t, traj=traj, detected=detected)
 
 def _truth_spans(geo, breaches):
