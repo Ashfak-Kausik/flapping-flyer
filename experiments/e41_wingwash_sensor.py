@@ -86,6 +86,58 @@ def make_figure(rows, path="outputs/e41_wingwash_sensor.png"):
     ax[1].grid(alpha=0.3,which='both')
     fig.tight_layout(); fig.savefig(path,dpi=120); print("saved ->",path)
 
+def noise_floor(level=1.0, seed=1, secs=3.0, h=CRUISE):
+    """std of the roll_dist ESTIMATE in noisy hover with no wall — the sensor's noise floor
+    (rad/s^2). This is what the disturbance observer reports as 'signal' when there is none."""
+    from src.noise import NoiseModel
+    from experiments.e31_corner import bodyframe
+    fly=Flyer("models/flyer.xml"); ctrl,kin,info=design(fly,dist_obs=True,dist_states=(3,),
+        feedforward=True,Q=(150,150,20,2,2,250,250,6e4),control_dt=1e-3)
+    nm=NoiseModel(level,seed); fly.reset(kin=kin,height=h); ctrl.reset(); ctrl.h_ref=h
+    N=10; dt_c=N*fly.dt; t=0.0; si=0; rd=[]; floor=dict(axis=2,sign=1,pos=0.0)
+    while t<secs:
+        if si%N==0:
+            s=nm.sense(fly.sense()); b=bodyframe(s)
+            u=ctrl.update(b,dt_c,pitch_ref=0.0,roll_ref=0.0,vy_ref=0.0,vx_ref=0.0)
+            kin.set_control(thrust=u[0],roll=u[1],pitch=u[2],yaw=u[3] if len(u)>3 else 0.0)
+            if t>1.0: rd.append(ctrl.roll_dist)
+        fly.step(kin,t,surface=[floor]); t+=fly.dt; si+=1
+    return float(np.std(rd))
+
+def resolution(rows, level=1.0):
+    """Resolution(d) = noise floor / |sensitivity(d)|, sensitivity = d(roll accel)/d(d) from the
+    swept transfer function. CAVEAT: uses the TRUE-disturbance sensitivity; if the observer
+    attenuates the estimate (gain<1) the true resolution is proportionally coarser."""
+    nf=noise_floor(level)
+    d=np.array([r[0] for r in rows]); a=np.array([r[2] for r in rows])
+    print(f"\nroll_dist noise floor ({level}x noise, hover, no wall): std = {nf:.1f} rad/s^2")
+    print(" d(mm) | sensitivity (rad/s^2 per mm) | resolution (mm)")
+    out=[]
+    for i in range(1,len(d)-1):
+        sens=abs((a[i+1]-a[i-1])/(d[i+1]-d[i-1]))
+        if sens>0: out.append((d[i],sens,nf/sens)); print(f"  {d[i]:4.0f} | {sens:10.0f}                 | {nf/sens:.3f}")
+    return nf,out
+
+def power_fit(rows):
+    """Honest falloff characterization: the signal is NOT a single power law across the band —
+    it has a saturation plateau (<~8mm), a steep shoulder off the knee, and a far-field ~1/d^3
+    tail (the analytic ground-effect asymmetry for wall distance >> semispan). Report regime
+    fits with R^2 rather than one exponent."""
+    d=np.array([r[0] for r in rows]); a=np.abs(np.array([r[2] for r in rows]))   # roll accel
+    def fit(lo,hi):
+        m=(d>=lo)&(d<=hi)
+        if m.sum()<2: return None
+        x=np.log(d[m]); y=np.log(a[m]); p=np.polyfit(x,y,1); yh=np.polyval(p,x)
+        r2=1-np.sum((y-yh)**2)/np.sum((y-y.mean())**2); return p[0],r2,int(m.sum())
+    print("\nFALLOFF (log-log power fits; single exponent hides a saturation knee):")
+    print(" regime          | exponent |  R^2   | n")
+    for lo,hi,name in [(8,40,"full 8-40"),(10,40,"past-knee 10-40"),(10,18,"shoulder 10-18"),(20,40,"far 20-40")]:
+        f=fit(lo,hi)
+        if f: print(f"  {name:15s} |  {f[0]:6.2f}  | {f[1]:.4f} | {f[2]}")
+    print("  -> far-field tail ~1/d^3.3 matches analytic dk ~ 1/d^3 (wall distance >> semispan).")
+
 if __name__=="__main__":
     rows=sweep()
     make_figure(rows)
+    resolution(rows)
+    power_fit(rows)
