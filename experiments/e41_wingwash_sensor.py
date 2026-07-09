@@ -118,23 +118,32 @@ def resolution(rows, level=1.0):
         if sens>0: out.append((d[i],sens,nf/sens)); print(f"  {d[i]:4.0f} | {sens:10.0f}                 | {nf/sens:.3f}")
     return nf,out
 
-def power_fit(rows):
+def power_fit(rows, csv_path="outputs/e41_power_law_fits.csv"):
     """Honest falloff characterization: the signal is NOT a single power law across the band —
     it has a saturation plateau (<~8mm), a steep shoulder off the knee, and a far-field ~1/d^3
     tail (the analytic ground-effect asymmetry for wall distance >> semispan). Report regime
     fits with R^2 rather than one exponent."""
+    import csv
     d=np.array([r[0] for r in rows]); a=np.abs(np.array([r[2] for r in rows]))   # roll accel
     def fit(lo,hi):
         m=(d>=lo)&(d<=hi)
         if m.sum()<2: return None
-        x=np.log(d[m]); y=np.log(a[m]); p=np.polyfit(x,y,1); yh=np.polyval(p,x)
+        x=np.log10(d[m]); y=np.log10(a[m]); p=np.polyfit(x,y,1); yh=np.polyval(p,x)
         r2=1-np.sum((y-yh)**2)/np.sum((y-y.mean())**2); return p[0],r2,int(m.sum())
     print("\nFALLOFF (log-log power fits; single exponent hides a saturation knee):")
     print(" regime          | exponent |  R^2   | n")
+    results=[]
     for lo,hi,name in [(8,40,"full 8-40"),(10,40,"past-knee 10-40"),(10,18,"shoulder 10-18"),(20,40,"far 20-40")]:
         f=fit(lo,hi)
-        if f: print(f"  {name:15s} |  {f[0]:6.2f}  | {f[1]:.4f} | {f[2]}")
+        if f:
+            print(f"  {name:15s} |  {f[0]:6.2f}  | {f[1]:.4f} | {f[2]}")
+            results.append((name,lo,hi,f[0],f[1],f[2]))
     print("  -> far-field tail ~1/d^3.3 matches analytic dk ~ 1/d^3 (wall distance >> semispan).")
+    with open(csv_path,"w",newline="") as fh:
+        w=csv.writer(fh); w.writerow(["regime","d_min_mm","d_max_mm","exponent","r2","n"])
+        for row in results: w.writerow(row)
+    print("saved ->",csv_path)
+    return results
 
 if __name__=="__main__":
     rows=sweep()

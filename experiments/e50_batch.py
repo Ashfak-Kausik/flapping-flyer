@@ -31,8 +31,10 @@ def sample_course(rng, hard=False):
     W=rng.uniform(wlo,whi,n); L=rng.uniform(0.16,0.26,n)
     legs=[(dirs[i],float(L[i]),float(W[i])) for i in range(n)]
     breaches=[]
+    maxper = 2 if hard else 1                          # realistic density: <=1 opening per leg in the safe envelope
     for i in range(n):
-        for _ in range(int(rng.choice([0,1,2],p=[0.3,0.5,0.2]))):
+        cnt = int(rng.choice(list(range(maxper+1)), p=([0.4,0.6] if maxper==1 else [0.3,0.5,0.2])))
+        for _ in range(cnt):
             side=int(rng.choice([+1,-1])); ln=float(rng.uniform(0.015,0.090))
             fc=rng.uniform(0.30,0.70) if hard else rng.uniform(0.40,0.62)
             hf=(ln/L[i])/2; f0,f1=fc-hf,fc+hf
@@ -72,7 +74,7 @@ def score_quiet(geo, breaches, detected, tol=0.06):
 
 def batch(N=30, hard=False, level=1.0, seed0=0, verbose=False):
     rng=np.random.default_rng(1234+ (1 if hard else 0))
-    comp=0; runs=0; all_hits=all_tot=all_fp=0; all_locs=[]; n_with_breach=0
+    comp=0; runs=0; all_hits=all_tot=all_fp=0; all_locs=[]; n_with_breach=0; courses_found=0
     tag="HARD" if hard else "SAFE"
     for k in range(N):
         for _ in range(40):
@@ -85,12 +87,14 @@ def batch(N=30, hard=False, level=1.0, seed0=0, verbose=False):
         if reached:
             h,t,fp,locs=score_quiet(geo,breaches,r['detected'])
             all_hits+=h; all_tot+=t; all_fp+=fp; all_locs+=locs; n_with_breach+=1
+            if h>=1: courses_found+=1
             if verbose: print(f"  [{tag} {k}] legs={len(legs)} breaches={t} reached=Y det={h}/{t} fp={fp}")
         elif verbose: print(f"  [{tag} {k}] legs={len(legs)} breaches={len(breaches)} reached=N ({r['reached']})")
     locs=np.array(all_locs)
     print(f"\n=== {tag} batch: {runs} courses, level {level} ===")
     print(f"  completion rate     : {comp}/{runs} = {100*comp/max(runs,1):.0f}%")
-    print(f"  detection rate      : {all_hits}/{all_tot} = {100*all_hits/max(all_tot,1):.0f}%  (completed courses)")
+    print(f"  detection rate      : {all_hits}/{all_tot} = {100*all_hits/max(all_tot,1):.0f}%  (per-breach, completed courses)")
+    print(f"  per-course found >=1: {courses_found}/{n_with_breach} = {100*courses_found/max(n_with_breach,1):.0f}%  (course flagged >=1 opening)")
     print(f"  localization error  : {locs.mean():.1f} +/- {locs.std():.1f} mm (median {np.median(locs):.1f}, max {locs.max():.1f})" if len(locs) else "  localization: n/a")
     print(f"  false positives     : {all_fp} over {comp} completed courses ({all_fp/max(comp,1):.2f}/course)")
     return dict(runs=runs,comp=comp,hits=all_hits,tot=all_tot,fp=all_fp,locs=all_locs)
