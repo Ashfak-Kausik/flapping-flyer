@@ -49,7 +49,9 @@ def build_model(gap, path="models/_side_gap.xml"):
     key='<geom name="floor" type="plane" size="0 0 0.01" material="groundplane"/>\n'
     open(path,"w").write(xml.replace(key,key+g)); return path
 
-def run(gap, level=0.0, seed=0, rate=CONTROL_RATE, rec=True, fuse=False, tmax=None):
+def run(gap, level=0.0, seed=0, rate=CONTROL_RATE, rec=True, fuse=False, tmax=None, use_wingwash=True):
+    """use_wingwash=False drops the -e.Kc*rd_f wing-wash centring term (keep -e.Kd*v_lat damping),
+    same ablation convention as e48_mission.run(). Default True preserves original behaviour exactly."""
     walls,fin,Ltot=geometry(gap)
     nm=NoiseModel(level,seed); fly=Flyer(build_model(gap))
     ctrl,kin,info=design(fly,dist_obs=True,dist_states=(3,),feedforward=True,
@@ -82,7 +84,8 @@ def run(gap, level=0.0, seed=0, rate=CONTROL_RATE, rec=True, fuse=False, tmax=No
                         roll_ref=np.clip(+KFOLLOW*(dL-STANDOFF)-e.Kd*v_lat,-np.radians(2.5),np.radians(2.5))
                     pref+=(-pref/0.3+safe)*dt_c                   # re-straighten heading down the corridor (don't follow the void)
                 else:                                             # both walls present (or a fork): wing-wash centering
-                    roll_ref=np.clip(-e.Kc*rd_f-e.Kd*v_lat,-np.radians(2.5),np.radians(2.5))
+                    wingwash=-e.Kc*rd_f if use_wingwash else 0.0
+                    roll_ref=np.clip(wingwash-e.Kd*v_lat,-np.radians(2.5),np.radians(2.5))
                     pref+=(steer+safe)*dt_c
                 if fwd<e.STOP and min(fL,fR)<e.STOP and spd<0.03: tdir=+1 if fL>=fR else -1; state="TURN"; turn0=nose_f; I_y=0.0
             else:
