@@ -50,52 +50,56 @@ VARIANTS = {
     "OPEN_LOOP":   dict(fuse=False, use_wingwash=False, use_feelers=False, open_loop=True),
 }
 
-def run_variant(courses, kwargs, level=1.0, seed0=0, verbose=False, tag=""):
+def run_variant(courses, kwargs, level=1.0, seed0=0, verbose=False, tag="", rate=1000):
     """Serial reference implementation (kept for the smoke test / small N)."""
     comp=0; runs=0; all_hits=all_tot=all_fp=0; all_locs=[]; n_with_breach=0; courses_found=0
-    percourse=[]
+    percourse=[]; all_clear=[]
     for (k, legs, breaches, geo) in courses:
-        r = e48.run(geo, level=level, seed=seed0+k, rate=1000, tmax=None, **kwargs)
+        r = e48.run(geo, level=level, seed=seed0+k, rate=rate, tmax=None, **kwargs)
         runs += 1
         reached = r['reached'] == 'finish'
         comp += reached
+        all_clear.append(r['min_clear_mm'])
         row = dict(course_id=k, n_legs=len(legs), n_openings=len(breaches),
-                   completed=reached, n_detected=0, n_false_positives=0, loc_errors_mm=[])
+                   completed=reached, crashed=r['crashed'], min_clear_mm=r['min_clear_mm'],
+                   n_detected=0, n_false_positives=0, loc_errors_mm=[])
         if reached:
             h, t, fp, locs = e50.score_quiet(geo, breaches, r['detected'])
             all_hits += h; all_tot += t; all_fp += fp; all_locs += locs; n_with_breach += 1
             if h >= 1: courses_found += 1
             row.update(n_detected=h, n_false_positives=fp, loc_errors_mm=locs)
-            if verbose: print(f"  [{tag} {k}] reached=Y det={h}/{t} fp={fp}", flush=True)
+            if verbose: print(f"  [{tag} {k}] reached=Y det={h}/{t} fp={fp} clear={r['min_clear_mm']:.1f}mm", flush=True)
         elif verbose:
-            print(f"  [{tag} {k}] reached=N ({r['reached']})", flush=True)
+            print(f"  [{tag} {k}] reached=N ({r['reached']}) clear={r['min_clear_mm']:.1f}mm", flush=True)
         percourse.append(row)
     return dict(runs=runs, comp=comp, hits=all_hits, tot=all_tot, fp=all_fp, locs=all_locs,
-                n_with_breach=n_with_breach, courses_found=courses_found, percourse=percourse)
+                n_with_breach=n_with_breach, courses_found=courses_found, percourse=percourse, clear=all_clear)
 
 def _run_one_course(args):
     """Top-level (picklable) worker: runs ONE course through e48.run() + scoring, for use with
     ProcessPoolExecutor. Each worker builds its own fresh Flyer/model -- no shared state."""
-    (k, legs, breaches, geo, kwargs, level, seed0, tag) = args
+    (k, legs, breaches, geo, kwargs, level, seed0, tag, rate) = args
     model_path = f"models/_e51_{tag}_{k}_{os.getpid()}.xml"   # unique per (variant, course, process) -- avoids the build_model() shared-file race under parallel workers
-    r = e48.run(geo, level=level, seed=seed0+k, rate=1000, tmax=None, model_path=model_path, **kwargs)
+    r = e48.run(geo, level=level, seed=seed0+k, rate=rate, tmax=None, model_path=model_path, **kwargs)
     reached = r['reached'] == 'finish'
     row = dict(course_id=k, n_legs=len(legs), n_openings=len(breaches),
-               completed=reached, n_detected=0, n_false_positives=0, loc_errors_mm=[])
+               completed=reached, crashed=r['crashed'], min_clear_mm=r['min_clear_mm'],
+               n_detected=0, n_false_positives=0, loc_errors_mm=[])
     h=t=fp=0; locs=[]
     if reached:
         h, t, fp, locs = e50.score_quiet(geo, breaches, r['detected'])
         row.update(n_detected=h, n_false_positives=fp, loc_errors_mm=locs)
-    msg = (f"  [{tag} {k}] reached=Y det={h}/{t} fp={fp}" if reached
-           else f"  [{tag} {k}] reached=N ({r['reached']})")
-    return dict(course_id=k, reached=reached, h=h, t=t, fp=fp, locs=locs, row=row, msg=msg)
+    msg = (f"  [{tag} {k}] reached=Y det={h}/{t} fp={fp} clear={r['min_clear_mm']:.1f}mm" if reached
+           else f"  [{tag} {k}] reached=N ({r['reached']}) clear={r['min_clear_mm']:.1f}mm")
+    return dict(course_id=k, reached=reached, h=h, t=t, fp=fp, locs=locs, row=row, msg=msg,
+                min_clear_mm=r['min_clear_mm'])
 
-def run_variant_parallel(courses, kwargs, level=1.0, seed0=0, tag="", n_workers=12):
+def run_variant_parallel(courses, kwargs, level=1.0, seed0=0, tag="", n_workers=12, rate=1000):
     """Same result as run_variant(), but runs the courses of ONE variant concurrently across
     n_workers OS processes (each course flight is ~90s-25min of single-core work, and courses
     are fully independent, so this parallelizes cleanly)."""
     import concurrent.futures as cf
-    args = [(k, legs, breaches, geo, kwargs, level, seed0, tag) for (k, legs, breaches, geo) in courses]
+    args = [(k, legs, breaches, geo, kwargs, level, seed0, tag, rate) for (k, legs, breaches, geo) in courses]
     results_by_k = {}
     with cf.ProcessPoolExecutor(max_workers=n_workers) as ex:
         futures = {ex.submit(_run_one_course, a): a[0] for a in args}
@@ -103,17 +107,17 @@ def run_variant_parallel(courses, kwargs, level=1.0, seed0=0, tag="", n_workers=
             res = fut.result()
             print(res['msg'], flush=True)
             results_by_k[res['course_id']] = res
-    comp=0; runs=0; all_hits=all_tot=all_fp=0; all_locs=[]; n_with_breach=0; courses_found=0; percourse=[]
+    comp=0; runs=0; all_hits=all_tot=all_fp=0; all_locs=[]; n_with_breach=0; courses_found=0; percourse=[]; all_clear=[]
     for k in sorted(results_by_k):
         res = results_by_k[k]
-        runs += 1; comp += res['reached']
+        runs += 1; comp += res['reached']; all_clear.append(res['min_clear_mm'])
         if res['reached']:
             all_hits += res['h']; all_tot += res['t']; all_fp += res['fp']; all_locs += res['locs']
             n_with_breach += 1
             if res['h'] >= 1: courses_found += 1
         percourse.append(res['row'])
     return dict(runs=runs, comp=comp, hits=all_hits, tot=all_tot, fp=all_fp, locs=all_locs,
-                n_with_breach=n_with_breach, courses_found=courses_found, percourse=percourse)
+                n_with_breach=n_with_breach, courses_found=courses_found, percourse=percourse, clear=all_clear)
 
 def report(tag, res):
     locs = np.array(res['locs'])
@@ -201,5 +205,4 @@ if __name__ == "__main__":
 
     if not only:
         save_csv(results)
-        correctness_check(results)
         correctness_check(results)
