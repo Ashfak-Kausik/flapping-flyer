@@ -35,8 +35,24 @@ SIZE_OFFSET_MM=16.0                      # e45 feeler-edge calibration: true ~ d
 _TRACE=None                              # set to a list to capture per-control-step diagnostics
 def _wrap(a): return (a+np.pi)%(2*np.pi)-np.pi
 
-def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None):
-    nm=NoiseModel(level,seed); fly=Flyer(e47.build_model(geo)); fin=geo['finish']
+def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None,
+        use_wingwash=True, use_feelers=True, open_loop=False, model_path="models/_realistic.xml"):
+    """Ablation switches (all default to the original behaviour, bit-for-bit):
+      use_wingwash=False -> drop the -Kc*rd_f wing-wash centring term from roll_ref (keep -Kd*v_lat damping).
+      use_feelers=False  -> drop the feeler-based steer/safe contributions to pref, disable the
+                             breach veto AND the breach logger (no feelers -> can't detect openings
+                             either). The forward-feeler speed law (Vcmd/slow) and corner-turn trigger
+                             are left alone -- basic collision/speed handling, not the steering/detection
+                             channel being ablated.
+      open_loop=True     -> ignore all sensing: constant Vcmd=Vc, roll_ref=0.0, pref never updated
+                             (holds the initial heading), state machine never leaves CRUISE (no corner
+                             turns), breach logger disabled. Only the stabilizing attitude/pitch/yaw-rate
+                             loop runs.
+      model_path         -> where the built MJCF is written; e47.build_model()'s default path is a
+                             SHARED fixed file, so concurrent callers (e.g. parallel course runs)
+                             MUST pass distinct paths to avoid racing on the same file.
+    """
+    nm=NoiseModel(level,seed); fly=Flyer(e47.build_model(geo, path=model_path)); fin=geo['finish']
     ctrl,kin,info=design(fly,dist_obs=True,dist_states=(3,),feedforward=True,
                          Q=(150,150,20,2,2,250,250,6e4),control_dt=1.0/rate)
     ctrl.K[:,0]=0.0; ctrl.K[:,1]=0.0; ant=Antenna(fly); clr=Clearance(fly,n_rays=24)
@@ -56,8 +72,9 @@ def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None):
             f0,fLp,fRp,f50p,f50m,dL,dR=nm.feel(ant.feel([0,30,-30,50,-50,90,-90])); fwd,fL,fR=f0,fLp,fRp
             rd=ctrl.roll_dist; rd_f+=(rd-rd_f)*dt_c/0.10; pl=e.planes(psi,fly.x_com,dL,dR)
             ln=min(f50p,dL); rn=min(f50m,dR); safe=0.0
-            if rn<SAFE_BUF: safe+=KVEER*(SAFE_BUF-rn)/SAFE_BUF
-            if ln<SAFE_BUF: safe-=KVEER*(SAFE_BUF-ln)/SAFE_BUF
+            if use_feelers:
+                if rn<SAFE_BUF: safe+=KVEER*(SAFE_BUF-rn)/SAFE_BUF
+                if ln<SAFE_BUF: safe-=KVEER*(SAFE_BUF-ln)/SAFE_BUF
             slow=0.35 if min(ln,rn)<SAFE_BUF else 1.0
             gapL=dL>GAP_THRESH; gapR=dR>GAP_THRESH; fclear=fwd>CLEAR
             # ---- breach logger: project onto the open-side wall (perp offset = closed-side feeler) ----
@@ -66,7 +83,7 @@ def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None):
             # a breach = ONE wall open while the OPPOSITE wall is intact (a gap in a real corridor);
             # both-open (adrift/open space) or transient toggles at turns must not log.
             Lb = gapL and (not gapR); Rb = gapR and (not gapL)
-            if state=="CRUISE" and fclear:
+            if use_feelers and (not open_loop) and state=="CRUISE" and fclear:
                 if Lb and not openL: openL=True; onL=_proj(+1,dR); onLx=np.array([x,y])
                 if (not Lb) and openL:
                     openL=False
@@ -78,9 +95,11 @@ def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None):
             else:                                          # left CRUISE (turn) or forward blocked: close cleanly, no logging
                 openL=openR=False
             # ---- state machine ----
-            if state=="CRUISE":
+            if open_loop:
+                Vcmd=Vc; roll_ref=0.0                       # dead-reckoning: constant speed, wings level, hold initial heading
+            elif state=="CRUISE":
                 Vcmd=Vc*np.clip((fwd-STOP)/0.04,0.0,1.0)*slow
-                breach = fuse and fclear and (gapL!=gapR)
+                breach = fuse and use_feelers and fclear and (gapL!=gapR)
                 if breach:
                     if latch is None: latch=nose_f                    # hold heading at breach onset
                     if gapL: roll_ref=np.clip(-KFOLLOW*(dR-STANDOFF)-Kd*v_lat,-np.radians(2.5),np.radians(2.5))
@@ -88,8 +107,10 @@ def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None):
                     pref+=_wrap(latch-pref)*dt_c/0.2
                 else:
                     latch=None
-                    roll_ref=np.clip(-Kc*rd_f-Kd*v_lat,-np.radians(2.5),np.radians(2.5))
-                    pref+=(np.clip(Ksteer*(min(fL,FMAX)-min(fR,FMAX)),-0.5,0.5)+safe)*dt_c
+                    wingwash = -Kc*rd_f if use_wingwash else 0.0
+                    roll_ref=np.clip(wingwash-Kd*v_lat,-np.radians(2.5),np.radians(2.5))
+                    steer = np.clip(Ksteer*(min(fL,FMAX)-min(fR,FMAX)),-0.5,0.5) if use_feelers else 0.0
+                    pref+=(steer+safe)*dt_c
                 if fwd<STOP and min(fL,fR)<STOP and spd<0.03:
                     tdir=+1 if fL>=fR else -1; state="TURN"; turn0=nose_f; I_y=0.0; latch=None
             else:                                                     # TURN (pivot in place)

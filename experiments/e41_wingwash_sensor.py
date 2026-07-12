@@ -104,10 +104,11 @@ def noise_floor(level=1.0, seed=1, secs=3.0, h=CRUISE):
         fly.step(kin,t,surface=[floor]); t+=fly.dt; si+=1
     return float(np.std(rd))
 
-def resolution(rows, level=1.0):
+def resolution(rows, level=1.0, csv_path="outputs/e41_resolution.csv"):
     """Resolution(d) = noise floor / |sensitivity(d)|, sensitivity = d(roll accel)/d(d) from the
     swept transfer function. CAVEAT: uses the TRUE-disturbance sensitivity; if the observer
     attenuates the estimate (gain<1) the true resolution is proportionally coarser."""
+    import csv
     nf=noise_floor(level)
     d=np.array([r[0] for r in rows]); a=np.array([r[2] for r in rows])
     print(f"\nroll_dist noise floor ({level}x noise, hover, no wall): std = {nf:.1f} rad/s^2")
@@ -116,6 +117,13 @@ def resolution(rows, level=1.0):
     for i in range(1,len(d)-1):
         sens=abs((a[i+1]-a[i-1])/(d[i+1]-d[i-1]))
         if sens>0: out.append((d[i],sens,nf/sens)); print(f"  {d[i]:4.0f} | {sens:10.0f}                 | {nf/sens:.3f}")
+    with open(csv_path,"w",newline="") as fh:
+        w=csv.writer(fh)
+        w.writerow(["noise_floor_rad_s2","level"]); w.writerow([nf,level])
+        w.writerow([])
+        w.writerow(["d_mm","sensitivity_rad_s2_per_mm","resolution_mm"])
+        for row in out: w.writerow(row)
+    print("saved ->",csv_path)
     return nf,out
 
 def power_fit(rows, csv_path="outputs/e41_power_law_fits.csv"):

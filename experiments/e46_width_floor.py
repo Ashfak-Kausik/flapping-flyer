@@ -80,7 +80,7 @@ def run(W, level=0.0, seed=0, y0=0.0, L=0.25, rate=CONTROL_RATE, tmax=None, adap
         if abs(y)>hw+0.02 or z<0.0 or z>0.2: break
         t+=fly.dt; stepi+=1
     margin_mm=(strike_bound-ymax)*1e3                     # + = wingtip never reached the wall
-    return dict(W_mm=W*1e3, reached=bool(reached), struck=struck,
+    return dict(W_mm=W*1e3, level=level, seed=seed, reached=bool(reached), struck=struck,
                 margin_mm=margin_mm, ymax_mm=ymax*1e3, strike_bound_mm=strike_bound*1e3)
 
 def sweep(widths_mm=(64,56,48,42,38,34,32,30,28), levels=(0.0,1.0), seeds=(1,), L=0.25, adaptive_safe=True):
@@ -111,12 +111,34 @@ def make_figure(rows, path="outputs/e46_width_floor.png"):
     ax.set_title("width floor: lateral deviation vs corridor width"); ax.legend(fontsize=8); ax.grid(alpha=0.3)
     fig.tight_layout(); fig.savefig(path,dpi=120); print("saved ->",path)
 
+def save_csv(r_stock, r_adapt, path="outputs/e46_width_floor.csv"):
+    import csv
+    with open(path,"w",newline="") as fh:
+        w=csv.writer(fh)
+        w.writerow(["policy","W_mm","level","seed","reached","struck","margin_mm","ymax_mm","strike_bound_mm"])
+        for tag,rows in [("stock",r_stock),("adaptive",r_adapt)]:
+            for r in rows:
+                w.writerow([tag,r['W_mm'],r['level'],r['seed'],int(r['reached']),int(r['struck']),
+                            r['margin_mm'],r['ymax_mm'],r['strike_bound_mm']])
+        w.writerow([])
+        w.writerow(["policy","level","flyable_floor_mm"])
+        for tag,rows in [("stock",r_stock),("adaptive",r_adapt)]:
+            levels=sorted(set(r['level'] for r in rows))
+            for lv in levels:
+                ok=[r for r in rows if r['level']==lv and r['reached'] and not r['struck']]
+                w.writerow([tag,lv,min(r['W_mm'] for r in ok) if ok else ""])
+    print("saved ->",path)
+
 if __name__=="__main__":
     print("========== STOCK safety heuristic (SAFE_BUF fixed) ==========")
     r_stock=sweep(levels=(0.0,), adaptive_safe=False)
     print("\n========== ADAPTIVE safety heuristic (width-aware veer) ==========")
     r_adapt=sweep(levels=(0.0,1.0), adaptive_safe=True)
     make_figure(r_adapt)
+    save_csv(r_stock, r_adapt)
     for tag,rows in [("stock",r_stock),("adaptive",r_adapt)]:
         ok=[r for r in rows if r['reached'] and not r['struck']]
         if ok: print(f"FLYABLE FLOOR [{tag}]: {min(r['W_mm'] for r in ok):.0f}mm   (geometric bound {2*WINGREACH*1e3:.1f}mm)")
+        for lv in sorted(set(r['level'] for r in rows)):
+            ok_lv=[r for r in rows if r['level']==lv and r['reached'] and not r['struck']]
+            if ok_lv: print(f"  [{tag}] level={lv}: floor {min(r['W_mm'] for r in ok_lv):.0f}mm")

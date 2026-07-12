@@ -75,32 +75,66 @@ def score_quiet(geo, breaches, detected, tol=0.06):
 def batch(N=30, hard=False, level=1.0, seed0=0, verbose=False):
     rng=np.random.default_rng(1234+ (1 if hard else 0))
     comp=0; runs=0; all_hits=all_tot=all_fp=0; all_locs=[]; n_with_breach=0; courses_found=0
-    tag="HARD" if hard else "SAFE"
+    tag="HARD" if hard else "SAFE"; percourse=[]; skipped=0
     for k in range(N):
         for _ in range(40):
             legs,breaches=sample_course(rng,hard); geo=e47.build_geometry(legs,breaches)
             if valid(geo) and len(breaches)>0: break
-        else: continue
+        else: skipped+=1; continue
         r=e48.run(geo, level=level, seed=seed0+k, fuse=True); runs+=1
         reached = r['reached']=='finish'
         comp+=reached
+        row=dict(course_id=k, ensemble=tag, n_legs=len(legs), widths_mm=[round(w*1e3,2) for (_,_,w) in legs],
+                  n_openings=len(breaches), completed=reached, n_detected=0, n_false_positives=0, loc_errors_mm=[])
         if reached:
             h,t,fp,locs=score_quiet(geo,breaches,r['detected'])
             all_hits+=h; all_tot+=t; all_fp+=fp; all_locs+=locs; n_with_breach+=1
             if h>=1: courses_found+=1
+            row.update(n_detected=h, n_false_positives=fp, loc_errors_mm=locs)
             if verbose: print(f"  [{tag} {k}] legs={len(legs)} breaches={t} reached=Y det={h}/{t} fp={fp}")
         elif verbose: print(f"  [{tag} {k}] legs={len(legs)} breaches={len(breaches)} reached=N ({r['reached']})")
+        percourse.append(row)
     locs=np.array(all_locs)
-    print(f"\n=== {tag} batch: {runs} courses, level {level} ===")
+    print(f"\n=== {tag} batch: {runs} courses, level {level} ===" + (f"  ({skipped} course slots skipped: no valid geometry in 40 tries)" if skipped else ""))
     print(f"  completion rate     : {comp}/{runs} = {100*comp/max(runs,1):.0f}%")
     print(f"  detection rate      : {all_hits}/{all_tot} = {100*all_hits/max(all_tot,1):.0f}%  (per-breach, completed courses)")
     print(f"  per-course found >=1: {courses_found}/{n_with_breach} = {100*courses_found/max(n_with_breach,1):.0f}%  (course flagged >=1 opening)")
-    print(f"  localization error  : {locs.mean():.1f} +/- {locs.std():.1f} mm (median {np.median(locs):.1f}, max {locs.max():.1f})" if len(locs) else "  localization: n/a")
+    print(f"  localization error  : {locs.mean():.1f} +/- {locs.std():.1f} mm (median {np.median(locs):.1f}, max {locs.max():.1f})  n={len(locs)}" if len(locs) else "  localization: n/a")
     print(f"  false positives     : {all_fp} over {comp} completed courses ({all_fp/max(comp,1):.2f}/course)")
-    return dict(runs=runs,comp=comp,hits=all_hits,tot=all_tot,fp=all_fp,locs=all_locs)
+    return dict(runs=runs,comp=comp,hits=all_hits,tot=all_tot,fp=all_fp,locs=all_locs,
+                n_with_breach=n_with_breach,courses_found=courses_found,percourse=percourse,skipped=skipped)
+
+def save_csv(results, path="outputs/e50_batch.csv"):
+    """Persist one row per course (both ensembles) plus aggregate rows per ensemble,
+    reproducible from a file (same pattern as e37/e38/e41's CSV exports)."""
+    import csv
+    with open(path,"w",newline="") as fh:
+        w=csv.writer(fh)
+        w.writerow(["course_id","ensemble","n_legs","widths_mm","n_openings","completed",
+                     "n_detected","n_false_positives","loc_errors_mm"])
+        for tag,res in results.items():
+            for row in res['percourse']:
+                w.writerow([row['course_id'], row['ensemble'], row['n_legs'],
+                            ";".join(str(x) for x in row['widths_mm']), row['n_openings'],
+                            int(bool(row['completed'])), row['n_detected'], row['n_false_positives'],
+                            ";".join(f"{x:.3f}" for x in row['loc_errors_mm'])])
+        w.writerow([])
+        w.writerow(["ensemble","runs","completed","comp_rate","hits","tot_openings","detect_rate",
+                     "courses_found","n_with_breach","per_course_rate","loc_mean_mm","loc_std_mm",
+                     "n_loc","fp_total","fp_per_course","skipped"])
+        for tag,res in results.items():
+            locs=np.array(res['locs'])
+            w.writerow([tag, res['runs'], res['comp'], res['comp']/max(res['runs'],1),
+                        res['hits'], res['tot'], res['hits']/max(res['tot'],1),
+                        res['courses_found'], res['n_with_breach'],
+                        res['courses_found']/max(res['n_with_breach'],1),
+                        locs.mean() if len(locs) else "", locs.std() if len(locs) else "",
+                        len(locs), res['fp'], res['fp']/max(res['comp'],1), res['skipped']])
+    print("saved ->",path)
 
 if __name__=="__main__":
     print("##### SAFE envelope (headline statistics) #####")
-    batch(N=40, hard=False, level=1.0, verbose=True)
+    safe=batch(N=40, hard=False, level=1.0, verbose=True)
     print("\n##### HARD subset (where navigation degrades) #####")
-    batch(N=20, hard=True, level=1.0, verbose=True)
+    hard=batch(N=20, hard=True, level=1.0, verbose=True)
+    save_csv(dict(SAFE=safe, HARD=hard))

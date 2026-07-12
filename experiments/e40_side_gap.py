@@ -133,12 +133,23 @@ def sweep(gmults=(0.5,1.0,1.5,2.0,3.0), level=0.0, seed=0, fuse=False):
         print(f"   {gm:>4} | {str(out):7} | {lz:6.1f}      |   {hw*1e3:.0f}mm   | {mc:4.1f}mm {'CRASH' if cr else ''}")
     return rows
 
+def save_csv(base_rows, fused_rows, path="outputs/e40_side_gap.csv"):
+    import csv
+    with open(path,"w",newline="") as fh:
+        w=csv.writer(fh)
+        w.writerow(["policy","gap_x_Wd","gap_mm","outcome","peak_y_mm","min_clear_mm","crashed"])
+        for tag,rows in [("base",base_rows),("fused",fused_rows)]:
+            for gm,gmm,out,lz,mc,cr in rows:
+                w.writerow([tag,gm,gmm,out,lz,mc,int(bool(cr))])
+    print("saved ->",path)
+
 if __name__=="__main__":
     print(f"side-gap (Case-B) on SCALE={S}: approach {XG*1e3:.0f}mm, corridor width {e.Wd*1e3:.0f}mm, wall line at +-{hw*1e3:.0f}mm\n")
     print("##### BASE policy (wing-wash centering only) — open-seeking failure #####")
     base=sweep(fuse=False)
     print("\n##### ANTENNA-VETO fusion (feeler overrides wash when a wall vanishes) #####")
     fused=sweep(fuse=True)
+    save_csv(base, fused)
     # illustrative fused trajectory at the gap that exited under base policy
     gm=2.0; r=run(gm*e.Wd, level=0.0, seed=0, rec=True, fuse=True)
     layout_plot(gm*e.Wd, r['traj'], path="outputs/e40_fused.png",

@@ -43,6 +43,31 @@ def sweep_offset(W=Wd, n=11, thrust=0.5):
         print(f"  {off*1e3:+7.1f}   | {d1*1e3:5.1f}  | {d2*1e3:5.1f} | {r['T_nNm']:9.2f}            | {r['roll_acc']:9.1f}")
     return rows
 
+def save_offset_csv(rows, k, path="outputs/e43_offset_sweep.csv"):
+    import csv
+    with open(path,"w",newline="") as fh:
+        w=csv.writer(fh)
+        w.writerow(["offset_mm","d_near_mm","d_far_mm","T_nNm","roll_acc_rad_s2"])
+        for row in rows: w.writerow(row)
+        w.writerow([]); w.writerow(["near_center_slope_rad_s2_per_mm"]); w.writerow([k])
+    print("saved ->",path)
+
+def save_superposition_csv(W=Wd, offs_mm=(0,4,8,12), path="outputs/e43_superposition.csv"):
+    import csv
+    rows=[]
+    for off in offs_mm:
+        d1=W/2-off/1e3; d2=W/2+off/1e3
+        tw=measure_corridor(d1,d2)['roll_acc']
+        s1=e41.measure(d1)['roll_acc']; s2=e41.measure(d2)['roll_acc']
+        sd=s1-s2
+        rows.append((off, tw, sd, tw/sd if sd else float('nan')))
+    with open(path,"w",newline="") as fh:
+        w=csv.writer(fh)
+        w.writerow(["offset_mm","two_wall_rad_s2","single_diff_rad_s2","ratio"])
+        for row in rows: w.writerow(row)
+    print("saved ->",path)
+    return rows
+
 def superposition_check(W=Wd, offs_mm=(0,4,8,12)):
     """Does the two-wall net equal single-wall(d1) - single-wall(d2)? (additivity test)"""
     print("\nsuperposition check: two-wall net  vs  single(d_near) - single(d_far)")
@@ -69,5 +94,7 @@ def make_figure(rows, path="outputs/e43_two_wall.png"):
 
 if __name__=="__main__":
     rows=sweep_offset()
-    make_figure(rows)
+    k=make_figure(rows)
+    save_offset_csv(rows, k)
     superposition_check()
+    save_superposition_csv()

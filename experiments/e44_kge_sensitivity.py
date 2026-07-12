@@ -26,20 +26,23 @@ def set_kge(k): ge.kappa_pts.__defaults__=(float(k), ge.KAPPA_MAX)   # rebind de
 def centering_scaling(kges=(0.5,1.0,1.5), offsets_mm=(4,8,12)):
     print("CENTERING SIGNAL vs K_GE (two-wall net roll accel, rad/s^2)")
     print(" K_GE | " + " | ".join(f"off {o}mm" for o in offsets_mm))
-    base={}
+    base={}; rows=[]
     for k in kges:
         set_kge(k); vals=[]
         for o in offsets_mm:
             d1=e43.Wd/2-o/1e3; d2=e43.Wd/2+o/1e3
             vals.append(e43.measure_corridor(d1,d2)['roll_acc'])
         if k==1.0: base=dict(zip(offsets_mm,vals))
+        rows.append((k,)+tuple(vals))
         print(f" {k:4.2f} | " + " | ".join(f"{v:8.1f}" for v in vals))
     set_kge(1.0)
     print("  (signal is ~linear in K_GE below saturation -> centering AUTHORITY scales with the unknown)")
+    return rows
 
 def rate_robustness(kges=(0.5,1.0,1.5), rates=(1000,500,250), seeds=(1,2,3)):
     print("\nRATE-ROBUSTNESS vs K_GE  (e38 course; does the wing-wash still rescue low rates?)")
     print(" K_GE | rate(Hz) | reach | crash | clearance(mm, completed)")
+    rows=[]
     for k in kges:
         set_kge(k)
         for rate in rates:
@@ -48,12 +51,27 @@ def rate_robustness(kges=(0.5,1.0,1.5), rates=(1000,500,250), seeds=(1,2,3)):
                 r=e38.run_one(rate_hz=rate, level=0.0, seed=sd)
                 if r['reached']: reach+=1; cl.append(r['min_clear_mm'])
                 if r['crashed']: crash+=1
-            mc=f"{np.mean(cl):.1f}" if cl else "  -  "
+            mc_val=float(np.mean(cl)) if cl else None
+            mc=f"{mc_val:.1f}" if mc_val is not None else "  -  "
+            rows.append((k,rate,reach,len(seeds),crash,mc_val))
             print(f" {k:4.2f} | {rate:7d}  |  {reach}/{len(seeds)}  |  {crash}/{len(seeds)}  | {mc}")
     set_kge(1.0)
     print("  -> if 250Hz completion drops at K_GE=0.5, the rate-robustness claim is conditional on")
     print("     the wing-wash being at least ~modelled strength: states the sim-to-real dependence honestly.")
+    return rows
+
+def save_csv(centering_rows, offsets_mm, rate_rows, path="outputs/e44_kge_sensitivity.csv"):
+    import csv
+    with open(path,"w",newline="") as fh:
+        w=csv.writer(fh)
+        w.writerow(["K_GE"]+[f"off_{o}mm_rad_s2" for o in offsets_mm])
+        for row in centering_rows: w.writerow(row)
+        w.writerow([])
+        w.writerow(["K_GE","rate_hz","reached","n_seeds","crashed","mean_clear_mm"])
+        for row in rate_rows: w.writerow(row)
+    print("saved ->",path)
 
 if __name__=="__main__":
-    centering_scaling()
-    rate_robustness()
+    centering_rows=centering_scaling()
+    rate_rows=rate_robustness()
+    save_csv(centering_rows, (4,8,12), rate_rows)

@@ -70,17 +70,33 @@ def run_one(level, seed):
     return dict(reached=reached, min_clear_mm=minc*1e3, crashed=crashed)
 
 def sweep(levels=LEVELS, seeds=SEEDS, verbose=True):
-    rows=[]
+    rows=[]; percall=[]
     for L in levels:
         cs=[]; reach=0; crash=0
         for sd in seeds:
             r=run_one(L,sd); cs.append(r['min_clear_mm']); reach+=r['reached']; crash+=r['crashed']
+            percall.append((L,sd,r['reached'],r['min_clear_mm'],r['crashed']))
             if verbose: print(f"  level {L:>4}  seed {sd}:  reached={'Y' if r['reached'] else 'N'}  minClear={r['min_clear_mm']:.1f}mm  {'CRASH' if r['crashed'] else 'ok'}")
         cs=np.array(cs)
         rows.append(dict(level=L, clear_mean=cs.mean(), clear_std=cs.std(), clear_min=cs.min(),
                          reach_rate=reach/len(seeds), crash_rate=crash/len(seeds)))
         if verbose: print(f"  => level {L}: clearance {cs.mean():.1f}+-{cs.std():.1f}mm  reach {reach}/{len(seeds)}  crash {crash}/{len(seeds)}\n")
-    return rows
+    return rows, percall
+
+def save_csv(rows, percall, path="outputs/e37_noise_sweep.csv"):
+    """Persist per-seed runs and per-level aggregates, reproducible from a file
+    (same pattern as outputs/e38_rate_sweep.csv and outputs/e41_power_law_fits.csv)."""
+    import csv
+    with open(path,"w",newline="") as fh:
+        w=csv.writer(fh)
+        w.writerow(["noise_level","seed","reached","min_clear_mm","crashed"])
+        for L,sd,reached,clear,crashed in percall:
+            w.writerow([L,sd,int(bool(reached)),clear,int(bool(crashed))])
+        w.writerow([])
+        w.writerow(["noise_level","clear_mean_mm","clear_std_mm","clear_min_mm","reach_rate","crash_rate","n_seeds"])
+        for r in rows:
+            w.writerow([r['level'],r['clear_mean'],r['clear_std'],r['clear_min'],r['reach_rate'],r['crash_rate'],len(SEEDS)])
+    print("saved ->",path)
 
 def make_figure(rows, path="outputs/e37_noise_sweep.png"):
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
@@ -99,7 +115,8 @@ def make_figure(rows, path="outputs/e37_noise_sweep.png"):
 
 if __name__=="__main__":
     print(f"noise sweep on SCALE={e.SCALE} course ({e.path_length()*1e3:.0f}mm); {len(LEVELS)} levels x {len(SEEDS)} seeds")
-    rows=sweep(); 
+    rows,percall=sweep()
     print("\nlevel | clearance(mm) | reached | crashed")
     for r in rows: print(f"  {r['level']:>4} | {r['clear_mean']:5.1f} +- {r['clear_std']:4.1f} | {r['reach_rate']*100:3.0f}%    | {r['crash_rate']*100:3.0f}%")
     make_figure(rows)
+    save_csv(rows, percall)

@@ -67,15 +67,31 @@ def run_one(rate_hz=10000, level=0.0, seed=0):
     return dict(reached=reached, min_clear_mm=minc*1e3, crashed=crashed)
 
 def sweep(rates=RATES, seeds=SEEDS, level=0.0, verbose=True):
-    rows=[]
+    rows=[]; percall=[]
     for R in rates:
         cs=[]; reach=0; crash=0
         for sd in seeds:
             r=run_one(R,level,sd); cs.append(r['min_clear_mm']); reach+=r['reached']; crash+=r['crashed']
+            percall.append((R,sd,r['reached'],r['min_clear_mm'],r['crashed']))
             if verbose: print(f"  {R:>6}Hz seed {sd}: reached={'Y' if r['reached'] else 'N'} minClear={r['min_clear_mm']:.1f}mm {'CRASH' if r['crashed'] else 'ok'}")
         cs=np.array(cs); rows.append(dict(rate=R, clear_mean=cs.mean(), clear_std=cs.std(), reach_rate=reach/len(seeds), crash_rate=crash/len(seeds)))
         if verbose: print(f"  => {R}Hz: {cs.mean():.1f}+-{cs.std():.1f}mm  reach {reach}/{len(seeds)}  crash {crash}/{len(seeds)}\n")
-    return rows
+    return rows, percall
+
+def save_csv(rows, percall, path="outputs/e38_rate_sweep.csv"):
+    """Persist both the per-seed runs and the per-rate aggregates, so the table is
+    reproducible from a file (same pattern as outputs/e41_power_law_fits.csv)."""
+    import csv
+    with open(path,"w",newline="") as fh:
+        w=csv.writer(fh)
+        w.writerow(["rate_hz","seed","reached","min_clear_mm","crashed"])
+        for R,sd,reached,clear,crashed in percall:
+            w.writerow([R,sd,int(bool(reached)),clear,int(bool(crashed))])
+        w.writerow([])
+        w.writerow(["rate_hz","clear_mean_mm","clear_std_mm","reach_rate","crash_rate","n_seeds"])
+        for r in rows:
+            w.writerow([r['rate'],r['clear_mean'],r['clear_std'],r['reach_rate'],r['crash_rate'],len(SEEDS)])
+    print("saved ->",path)
 
 def make_figure(rows, path="outputs/e38_control_rate.png"):
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
@@ -89,8 +105,11 @@ def make_figure(rows, path="outputs/e38_control_rate.png"):
     fig.tight_layout(); fig.savefig(path,dpi=120); print("saved ->",path)
 
 if __name__=="__main__":
-    print(f"control-rate sweep on SCALE={e.SCALE} course; rates {RATES} Hz x {len(SEEDS)} seeds (noise level 0)")
-    rows=sweep()
+    import sys
+    level=float(sys.argv[1]) if len(sys.argv)>1 else 0.0
+    print(f"control-rate sweep on SCALE={e.SCALE} course; rates {RATES} Hz x {len(SEEDS)} seeds (noise level {level})")
+    rows,percall=sweep(level=level)
     print("\n rate(Hz) | clearance(mm) | reached | crashed")
     for r in rows: print(f"  {r['rate']:>6} | {r['clear_mean']:5.1f} +- {r['clear_std']:4.1f} | {r['reach_rate']*100:3.0f}%    | {r['crash_rate']*100:3.0f}%")
     make_figure(rows)
+    save_csv(rows, percall)

@@ -70,10 +70,23 @@ def make_figure(rows, cal=None, path="outputs/e49_breach_floor.png"):
     ax[1].set_title("size estimate vs true"); ax[1].legend(fontsize=8); ax[1].grid(alpha=0.3)
     fig.tight_layout(); fig.savefig(path,dpi=120); print("saved ->",path)
 
+def save_csv(rows, cal, path="outputs/e49_breach_floor.csv"):
+    import csv
+    with open(path,"w",newline="") as fh:
+        w=csv.writer(fh)
+        w.writerow(["true_length_mm","detect_rate","loc_err_mm","size_raw_mm","size_err_raw_mm"])
+        for L,dr,loc,sz in rows: w.writerow([L,dr,loc,sz,(sz-L) if not np.isnan(sz) else ""])
+        w.writerow([])
+        if cal is not None:
+            a,b=cal
+            w.writerow(["calibration_a","calibration_b_mm"]); w.writerow([a,b])
+    print("saved ->",path)
+
 if __name__=="__main__":
     rows=sweep()
     cal=calibrate(rows)
     make_figure(rows, cal)
+    save_csv(rows, cal)
     ok=[r for r in rows if r[1]>=0.99]
     if ok: print(f"\nDETECTION FLOOR (100% detected): {min(r[0] for r in ok):.0f}mm at corridor {Wd*1e3:.0f}mm, 1x noise")
     partial=[r for r in rows if 0<r[1]<0.99]

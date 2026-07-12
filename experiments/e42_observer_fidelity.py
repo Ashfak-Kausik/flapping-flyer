@@ -69,12 +69,26 @@ def bandwidth(d_wall=0.015, secs=2.5, step_in_at=1.0):
     return dict(rise_ms=(t90-t10)*1e3 if not np.isnan(t90) else np.nan, t10=t10, t90=t90,
                 base=base, final=final, step_at=step_in_at)
 
+def save_csv(fid_rows, bw, path="outputs/e42_observer_fidelity.csv"):
+    import csv
+    with open(path,"w",newline="") as fh:
+        w=csv.writer(fh)
+        w.writerow(["d_mm","d_eff_mm","est_rad_s2","true_rad_s2","gain","ydrift_mm"])
+        for r in fid_rows:
+            w.writerow([r['d_mm'],r['d_eff_mm'],r['est'],r['true'],r['gain'],r['ydrift_mm']])
+        w.writerow([])
+        w.writerow(["bw_base_rad_s2","bw_final_rad_s2","rise_10_90_ms"])
+        w.writerow([bw['base'],bw['final'],bw['rise_ms']])
+    print("saved ->",path)
+
 if __name__=="__main__":
     print("OBSERVER FIDELITY (level hover near wall, no noise): estimate roll_dist vs e41 true")
     print(" d(mm) | d_eff | est (rad/s^2) | true (rad/s^2) | gain | ydrift(mm)")
+    fid_rows=[]
     for dmm in [12,15,18,22,26,30]:
-        r=fidelity(dmm/1e3)
+        r=fidelity(dmm/1e3); fid_rows.append(r)
         print(f" {r['d_mm']:5.0f} | {r['d_eff_mm']:5.1f} | {r['est']:10.0f}    | {r['true']:10.0f}     | {r['gain']:.3f} | {r['ydrift_mm']:+.2f}")
     print("\nBANDWIDTH (wall stepped 200mm->15mm):")
     b=bandwidth()
     print(f"  base {b['base']:.0f} -> final {b['final']:.0f} rad/s^2 ; 10-90% rise = {b['rise_ms']:.1f} ms")
+    save_csv(fid_rows, b)
