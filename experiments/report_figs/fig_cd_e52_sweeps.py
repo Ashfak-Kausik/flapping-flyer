@@ -24,8 +24,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 SRC_CSV = "outputs/e52_wingwash_scaling.csv"
-OUT_PDF_C = "outputs/report/fig_c_e52_width_sweep.pdf"
-OUT_PDF_D = "outputs/report/fig_d_e52_legs_sweep.pdf"
+OUT_PNG_C = "outputs/report/fig_c_e52_width_sweep.png"
+OUT_PNG_D = "outputs/report/fig_d_e52_legs_sweep.png"
 
 COLORS = {"FULL": "#1d6fb8", "NO_WINGWASH": "#f59e0b"}
 WIDTH_CELL_ORDER = ["70-76", "64-70", "58-64", "52-58", "46-52"]
@@ -108,11 +108,11 @@ def main():
     print(f"Source CSV: {SRC_CSV} (per-cell block + delta block)")
 
     make_panel("width", WIDTH_CELL_ORDER, "corridor width band (mm), legs fixed at 3",
-               OUT_PDF_C, "e52 width sweep: completion FULL vs NO_WINGWASH, and the delta\n"
+               OUT_PNG_C, "e52 width sweep: completion FULL vs NO_WINGWASH, and the delta\n"
                          "(non-monotonic, sign-flipping)",
                per_cell, delta)
     make_panel("legs", LEGS_CELL_ORDER, "leg count, width fixed 58-64mm",
-               OUT_PDF_D, "e52 leg-count sweep: completion FULL vs NO_WINGWASH, and the delta\n"
+               OUT_PNG_D, "e52 leg-count sweep: completion FULL vs NO_WINGWASH, and the delta\n"
                          "(non-monotonic, sign-flipping)",
                per_cell, delta)
 

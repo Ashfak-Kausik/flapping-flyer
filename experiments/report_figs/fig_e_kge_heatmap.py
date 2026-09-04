@@ -20,7 +20,7 @@ import matplotlib.colors as mcolors
 import numpy as np
 
 SRC_CSV = "outputs/e44_kge_sensitivity.csv"
-OUT_PDF = "outputs/report/fig_e_kge_heatmap.pdf"
+OUT_PNG = "outputs/report/fig_e_kge_heatmap.png"
 
 KGE_ORDER = ["0.5", "1.0", "1.5"]
 RATE_ORDER = ["1000", "500", "250"]
@@ -96,8 +96,8 @@ def main():
     ax.tick_params(which="minor", length=0)
 
     fig.tight_layout()
-    fig.savefig(OUT_PDF, dpi=300)
-    print(f"\nsaved -> {OUT_PDF}")
+    fig.savefig(OUT_PNG, dpi=300)
+    print(f"\nsaved -> {OUT_PNG}")
 
 
 if __name__ == "__main__":

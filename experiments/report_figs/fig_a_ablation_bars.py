@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 SRC_CSV = "outputs/e51_baselines.csv"
-OUT_PDF = "outputs/report/fig_a_ablation_bars.pdf"
+OUT_PNG = "outputs/report/fig_a_ablation_bars.png"
 
 VARIANT_ORDER = ["FULL", "NO_WINGWASH", "NO_FEELERS", "OPEN_LOOP"]
 COLORS = {"FULL": "#1d6fb8", "NO_WINGWASH": "#f59e0b",
@@ -110,8 +110,8 @@ def main():
              "e48_mission.py:86) -- 0% is an untried metric, not an observed miss.",
              fontsize=6.8, color="#444444")
     fig.tight_layout(rect=[0, 0.06, 1, 1])
-    fig.savefig(OUT_PDF, dpi=300)
-    print(f"\nsaved -> {OUT_PDF}")
+    fig.savefig(OUT_PNG, dpi=300)
+    print(f"\nsaved -> {OUT_PNG}")
 
 
 if __name__ == "__main__":

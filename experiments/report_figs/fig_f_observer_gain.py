@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 SRC_CSV = "outputs/e42_observer_fidelity.csv"
-OUT_PDF = "outputs/report/fig_f_observer_gain.pdf"
+OUT_PNG = "outputs/report/fig_f_observer_gain.png"
 
 
 def load_blocks(path):
@@ -75,8 +75,8 @@ def main():
     ax.grid(alpha=0.25)
     ax.legend(fontsize=8.5, loc="lower right")
     fig.tight_layout()
-    fig.savefig(OUT_PDF, dpi=300)
-    print(f"\nsaved -> {OUT_PDF}")
+    fig.savefig(OUT_PNG, dpi=300)
+    print(f"\nsaved -> {OUT_PNG}")
 
 
 if __name__ == "__main__":

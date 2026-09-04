@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 SRC_CSV = "outputs/e51b_ablation_followup.csv"
-OUT_PDF = "outputs/report/fig_b_clearance_boxplot.pdf"
+OUT_PNG = "outputs/report/fig_b_clearance_boxplot.png"
 
 WINGREACH_MM = 13.3
 NEAR_STRIKE_MM = 18.3
@@ -92,8 +92,8 @@ def main():
     ax.grid(axis="y", alpha=0.25)
     ax.legend(fontsize=8, loc="upper right")
     fig.tight_layout()
-    fig.savefig(OUT_PDF, dpi=300)
-    print(f"\nsaved -> {OUT_PDF}")
+    fig.savefig(OUT_PNG, dpi=300)
+    print(f"\nsaved -> {OUT_PNG}")
 
 
 if __name__ == "__main__":
