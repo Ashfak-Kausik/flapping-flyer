@@ -117,4 +117,4 @@ BREACHES=[(+1,0,0.45,0.62),      # left wall, leg0 (small)
 
 if __name__=="__main__":
     geo=build_geometry(LEGS,BREACHES); build_model(geo)
-    selfcheck(geo,LEGS); layout_figure(geo,BREACHES) 
+    selfcheck(geo,LEGS); layout_figure(geo,BREACHES)

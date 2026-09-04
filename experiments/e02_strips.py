@@ -1,7 +1,7 @@
 """
 e02_strips.py — STAGE 2 CHECK (piece 1): wing discretization.
 
-Proves the strip discretisation faithfully represents the real wing:
+Proves the strip discretization faithfully represents the real wing:
   (1) strip areas must sum to the analytic ellipse area (convergence),
   (2) the area moments — which set WHERE lift acts and HOW force scales —
       must match theory.
