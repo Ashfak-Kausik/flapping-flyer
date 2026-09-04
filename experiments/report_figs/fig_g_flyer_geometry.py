@@ -101,17 +101,15 @@ def main():
     ax.annotate(f"c_max = {chord.max():.1f} mm", xy=(le[9], HINGE_R[1] + r[9]),
                xytext=(le[9] + 1.5, HINGE_R[1] + r[9] + 1.5), fontsize=8.5, color="#455a64",
                arrowprops=dict(arrowstyle="->", lw=0.7, color="#455a64"))
-    ax.annotate("pitch axis\n(quarter-chord, x̂₀=0.25)", xy=(0, 9), xytext=(-8.5, 9),
-               fontsize=7.5, color="#b71c1c", ha="left", va="center",
+    ax.annotate("pitch axis\n(quarter-chord, x0=0.25)", xy=(0, 9), xytext=(-8.5, 9),
+               fontsize=8, color="#b71c1c", ha="left", va="center",
                arrowprops=dict(arrowstyle="->", lw=0.7, color="#b71c1c"))
 
-    ax.set_xlim(-9, 6.5); ax.set_ylim(-15, 15)
+    ax.set_xlim(-9, 6.5); ax.set_ylim(-16, 16)
     ax.set_aspect("equal")
     ax.set_xlabel("x — fore(+)/aft(−) from thorax origin (mm)")
     ax.set_ylabel("y — span, left(−)/right(+) (mm)")
-    ax.set_title("Flyer geometry: top view, to scale\n"
-                 "(wing planform = actual 20-strip discretization from e02_strip_table.csv; "
-                 "body from models/flyer.xml static geometry)")
+    ax.set_title("Flyer geometry: top view, to scale", fontsize=13, pad=10)
     ax.grid(alpha=0.2)
     handles = [mpatches.Patch(color="#37474f", label="thorax"),
                mpatches.Patch(color="#546e7a", label="head"),
@@ -120,8 +118,21 @@ def main():
                plt.Line2D([0], [0], color="#b71c1c", ls=":", lw=1.0, label="stroke hinge / pitch axis")]
     ax.legend(handles=handles, fontsize=8, loc="lower right")
 
-    fig.tight_layout()
-    fig.savefig(OUT_PNG, dpi=300)
+    fig.text(0.5, 0.01,
+             "wing planform = actual 20-strip discretization\n(outputs/e02_strip_table.csv); "
+             "body + hinge positions from models/flyer.xml",
+             fontsize=7.2, color="#444444", ha="center")
+
+    # The data's true aspect (wing span >> chord) makes set_aspect("equal") shrink
+    # the axes to a narrow column inside a normally-proportioned figure, leaving
+    # large dead margins. Rather than hand-computing a matching figsize (fragile --
+    # tight_layout's own spacing isn't known in advance), just give it a generously
+    # tall canvas and let bbox_inches="tight" crop the SAVED file to the actual
+    # rendered content -- this is the same pattern used elsewhere in the repo
+    # (e.g. e39_branching.py, e47_realistic_course.py, e48_mission.py all save with
+    # bbox_inches="tight").
+    fig.set_size_inches(8, 13)
+    fig.savefig(OUT_PNG, dpi=300, bbox_inches="tight")
     print(f"\nsaved -> {OUT_PNG}")
 
 
