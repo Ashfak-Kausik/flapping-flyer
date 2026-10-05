@@ -56,10 +56,10 @@ def run(W, level=0.0, seed=0, y0=0.0, L=0.25, rate=CONTROL_RATE, tmax=None, adap
     tmax=(L/e.Vc*2.6+8 if tmax is None else tmax); floor=dict(axis=2,sign=1,pos=0.0); pl=[]
     while t<tmax:
         if stepi%N==0:
-            s=nm.sense(fly.sense()); psi=s['yaw']; x,y,z=fly.x_com; b=bodyframe(s); v_lat=b['vy']
+            s_true=fly.sense(); s=nm.sense(s_true); psi=s['yaw']; psi_true=s_true['yaw']; x,y,z=fly.x_com; b=bodyframe(s); v_lat=b['vy']
             nose_f+=((psi-nose_f+np.pi)%(2*np.pi)-np.pi)*dt_c/0.04; nrate=(nose_f-nose_prev)/dt_c; nose_prev=nose_f
-            f0,f50p,f50m,dL,dR=nm.feel(ant.feel([0,50,-50,90,-90])); fwd=f0
-            rd=ctrl.roll_dist; rd_f+=(rd-rd_f)*dt_c/0.10; pl=e.planes(psi,fly.x_com,dL,dR)
+            raw=ant.feel([0,50,-50,90,-90]); f0,f50p,f50m,dL,dR=nm.feel(raw); fwd=f0
+            rd=ctrl.roll_dist; rd_f+=(rd-rd_f)*dt_c/0.10; pl=e.planes(psi_true,fly.x_com,raw[3],raw[4])
             ln=min(f50p,dL); rn=min(f50m,dR); safe=0.0
             if rn<SB: safe+=e.KVEER*(SB-rn)/SB
             if ln<SB: safe-=e.KVEER*(SB-ln)/SB

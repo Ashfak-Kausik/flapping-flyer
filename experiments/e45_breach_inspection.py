@@ -79,11 +79,11 @@ def run(level=0.0, seed=0, rate=CONTROL_RATE, fuse=True, tmax=None):
     openL=openR=False; onL=onR=0.0; detected=[]   # detected: (side, x0, x1)
     while t<tmax:
         if stepi%N==0:
-            s=nm.sense(fly.sense()); psi=s['yaw']; x,y,z=fly.x_com; spd=np.hypot(s['vx'],s['vy'])
+            s_true=fly.sense(); s=nm.sense(s_true); psi=s['yaw']; psi_true=s_true['yaw']; x,y,z=fly.x_com; spd=np.hypot(s['vx'],s['vy'])
             b=bodyframe(s); v_lat=b['vy']
             nose_f+=((psi-nose_f+np.pi)%(2*np.pi)-np.pi)*dt_c/0.04; nrate=(nose_f-nose_prev)/dt_c; nose_prev=nose_f
-            f0,fLp,fRp,f50p,f50m,dL,dR=nm.feel(ant.feel([0,30,-30,50,-50,90,-90])); fwd,fL,fR=f0,fLp,fRp
-            rd=ctrl.roll_dist; rd_f+=(rd-rd_f)*dt_c/0.10; pl=e.planes(psi,fly.x_com,dL,dR)
+            raw=ant.feel([0,30,-30,50,-50,90,-90]); f0,fLp,fRp,f50p,f50m,dL,dR=nm.feel(raw); fwd,fL,fR=f0,fLp,fRp
+            rd=ctrl.roll_dist; rd_f+=(rd-rd_f)*dt_c/0.10; pl=e.planes(psi_true,fly.x_com,raw[5],raw[6])
             gapL=dL>GAP_THRESH; gapR=dR>GAP_THRESH; fclear=fwd>e.CLEAR
             # ---- BREACH LOGGER: side open while forward clear = breach; log onset/offset x ----
             if fclear:

@@ -66,11 +66,11 @@ def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None,
     openL=openR=False; onL=onR=None; onLx=onRx=None; detected=[]; latch=None
     while t<tmax:
         if si%N==0:
-            s=nm.sense(fly.sense()); psi=s['yaw']; x,y,z=fly.x_com; b=bodyframe(s); v_lat=b['vy']
+            s_true=fly.sense(); s=nm.sense(s_true); psi=s['yaw']; psi_true=s_true['yaw']; x,y,z=fly.x_com; b=bodyframe(s); v_lat=b['vy']
             spd=np.hypot(s['vx'],s['vy'])
             nose_f+=_wrap(psi-nose_f)*dt_c/0.04; nrate=(nose_f-nose_prev)/dt_c; nose_prev=nose_f
-            f0,fLp,fRp,f50p,f50m,dL,dR=nm.feel(ant.feel([0,30,-30,50,-50,90,-90])); fwd,fL,fR=f0,fLp,fRp
-            rd=ctrl.roll_dist; rd_f+=(rd-rd_f)*dt_c/0.10; pl=e.planes(psi,fly.x_com,dL,dR)
+            raw=ant.feel([0,30,-30,50,-50,90,-90]); f0,fLp,fRp,f50p,f50m,dL,dR=nm.feel(raw); fwd,fL,fR=f0,fLp,fRp
+            rd=ctrl.roll_dist; rd_f+=(rd-rd_f)*dt_c/0.10; pl=e.planes(psi_true,fly.x_com,raw[5],raw[6])
             ln=min(f50p,dL); rn=min(f50m,dR); safe=0.0
             if use_feelers:
                 if rn<SAFE_BUF: safe+=KVEER*(SAFE_BUF-rn)/SAFE_BUF
