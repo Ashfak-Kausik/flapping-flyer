@@ -36,7 +36,8 @@ _TRACE=None                              # set to a list to capture per-control-
 def _wrap(a): return (a+np.pi)%(2*np.pi)-np.pi
 
 def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None,
-        use_wingwash=True, use_feelers=True, open_loop=False, model_path="models/_realistic.xml"):
+        use_wingwash=True, use_feelers=True, open_loop=False, model_path="models/_realistic.xml",
+        feeler=None):
     """Ablation switches (all default to the original behaviour, bit-for-bit):
       use_wingwash=False -> drop the -Kc*rd_f wing-wash centring term from roll_ref (keep -Kd*v_lat damping).
       use_feelers=False  -> drop the feeler-based steer/safe contributions to pref, disable the
@@ -51,8 +52,12 @@ def run(geo, level=1.0, seed=0, rate=1000, fuse=True, tmax=None,
       model_path         -> where the built MJCF is written; e47.build_model()'s default path is a
                              SHARED fixed file, so concurrent callers (e.g. parallel course runs)
                              MUST pass distinct paths to avoid racing on the same file.
+      feeler             -> None (idealized feeler, default) or a dict of NoiseModel feeler_* options
+                             (feeler_range / feeler_dropout / feeler_noise_mult). Degrades ONLY the
+                             nm.feel() readings navigation uses; the true ray-cast `raw` that feeds
+                             the wing-wash wall planes is not affected.
     """
-    nm=NoiseModel(level,seed); fly=Flyer(e47.build_model(geo, path=model_path)); fin=geo['finish']
+    nm=NoiseModel(level,seed,**(feeler or {})); fly=Flyer(e47.build_model(geo, path=model_path)); fin=geo['finish']
     ctrl,kin,info=design(fly,dist_obs=True,dist_states=(3,),feedforward=True,
                          Q=(150,150,20,2,2,250,250,6e4),control_dt=1.0/rate)
     ctrl.K[:,0]=0.0; ctrl.K[:,1]=0.0; ant=Antenna(fly); clr=Clearance(fly,n_rays=24)
