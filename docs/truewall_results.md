@@ -309,9 +309,19 @@ no-wing-wash on the primary task.** No table resolves a difference between FULL 
   small to exclude a real effect of the original size, but nothing now supports one.
 - **Degrading the feeler does not produce a resolved wing-wash rescue (T4).** At 0.12 and 0.08 m the
   feeler is barely affected and the variants match. At 0.03 m both fail together, striking a wall in
-  essentially every flight. The 0.05 m cell (25/40 vs 18/40, +17.5 pp, CI [0.0, +35.0] pp,
+  essentially every flight; that cell is incomplete (32 paired courses, 66 of 80 flights), but the 8
+  missing courses cannot change the outcome. The 0.05 m cell (25/40 vs 18/40, +17.5 pp, CI [0.0, +35.0] pp,
   p = 0.118) is a single-seed hint only: one level of four, not pre-registered, not corrected for
   multiplicity, and not replicated.
+- **Headline mission figures (FULL, true walls, T1) and how to read them.** Reached 35/40,
+  strike-free 30/40, detection 43/58, localization about 8 mm, false positives about 0.03 per
+  course. These come from the single-seed T1 run (noise seed = course id), not from the T2
+  statistics run. Three of them are conditional on the flight reaching the finish:
+  - Detection 43/58 (74%) counts openings only on the 35 courses FULL completed. End-to-end, over
+    all 40 courses, it is 43/68 (63%).
+  - False positives: 1 in 35 reached courses = 0.029 per reached course (0.025 over all 40).
+  - Localization 7.9 mm is the mean over the 43 detected openings, with sd 7.2 mm and median
+    6.9 mm. Missed openings contribute no error.
 - **Not run.** The dropout and noise axes of e54 were never flown. The dropout model is too weak to
   be informative as written: with the feeler refreshed at 1 kHz and drops independent per tick,
   hold-last-value dropout leaves a ray stale for about 5 ms on average even at p = 0.8. The 0.03 m
