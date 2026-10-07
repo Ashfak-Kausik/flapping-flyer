@@ -282,3 +282,37 @@ it is BOTH-FAIL-TOGETHER.**
   established. FULL still loses 7 courses relative to idealized, so at most a partial rescue.
 - 0.03 m: both variants strike a wall in essentially every flight (FULL 0/32, NO_WINGWASH 1/32
   strike-free). The 8 unpaired courses cannot change this: FULL could reach at most 8/40.
+
+---
+
+## Closing summary - corrected-harness verdict across T1-T4
+
+**Under the corrected true-geometry harness, wing-wash is statistically indistinguishable from
+no-wing-wash on the primary task.** No table resolves a difference between FULL and NO_WINGWASH.
+
+| table | what it tested | FULL vs NO_WINGWASH | outcome |
+|---|---|---|---|
+| T1 | e51 primary ablation, true walls, 40 courses, 1 seed | strike-free 30/40 vs 29/40; openings found 43/68 vs 41/68 | within noise |
+| T2 | paired stats, 40 courses x 5 matched seeds (pre-registered) | strike-free 152/200 vs 150/200, +1.0 pp, 95% CI [-5.0, +6.5] pp, McNemar p = 0.83 | no difference resolved |
+| T3 | leg-sweep replication, 100 courses, fresh seeds (pre-registered) | strike-free 48/100 vs 42/100, +6, McNemar p = 0.29 (pre-fix: 48 vs 34, p = 0.0125) | did not reproduce |
+| T4 | feeler range limited to 0.12 / 0.08 / 0.05 / 0.03 m, 1 seed (not pre-registered) | 30 vs 31, 31 vs 31, 25 vs 18 (p = 0.118), 0 vs 1 of 32 | no rescue resolved |
+
+- **Primary task (T1, T2).** Strike-free completion differs by +1.0 pp over 200 paired trials with
+  12 vs 10 discordant pairs; detection and min-clearance show nothing either. Indistinguishable is
+  the accurate word, not equivalent: the 95% interval reaches +6.5 pp, so equivalence within the
+  pre-registered +/-5 pp margin was not established, and a benefit of up to about 6.5 pp is not
+  excluded.
+- **The one apparent positive was a seed artifact (T3).** The pre-fix leg-sweep effect (48 vs 34,
+  p = 0.0125) did not survive true walls and fresh noise seeds: 48 vs 42, p = 0.29. The 5-leg cell
+  that drove it went from 13 vs 5 to 12 vs 10, with FULL unchanged and NO_WINGWASH recovering, which
+  is the signature of a bad seed draw for NO_WINGWASH in the original run. The replication is too
+  small to exclude a real effect of the original size, but nothing now supports one.
+- **Degrading the feeler does not produce a resolved wing-wash rescue (T4).** At 0.12 and 0.08 m the
+  feeler is barely affected and the variants match. At 0.03 m both fail together, striking a wall in
+  essentially every flight. The 0.05 m cell (25/40 vs 18/40, +17.5 pp, CI [0.0, +35.0] pp,
+  p = 0.118) is a single-seed hint only: one level of four, not pre-registered, not corrected for
+  multiplicity, and not replicated.
+- **Not run.** The dropout and noise axes of e54 were never flown. The dropout model is too weak to
+  be informative as written: with the feeler refreshed at 1 kHz and drops independent per tick,
+  hold-last-value dropout leaves a ray stale for about 5 ms on average even at p = 0.8. The 0.03 m
+  range cell is also incomplete (66 of 80 flights). The checkpoint remains resumable.
