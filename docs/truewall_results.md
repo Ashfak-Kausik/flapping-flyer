@@ -229,3 +229,56 @@ What the data do support: any wing-wash benefit on strike-free completion in the
 smaller than about 6.5 pp, and every point estimate collected so far on the corrected harness sits
 at or slightly above zero in FULL's favour (+1.0 pp primary, +6 pp leg sweep) without reaching
 significance. No expansion run has been launched.
+
+---
+
+## Table T4 - e54 degraded feeler, RANGE AXIS ONLY (partial run)
+
+**Source:** `outputs/degraded_feeler.csv.partial.jsonl`, the checkpoint of
+`experiments/e54_degraded_feeler.py` (code commit `b303ce0`). The sweep was cut off by a power loss
+on 2026-10-07 after 306 of 960 flights, all on the range axis; the checkpoint's damaged tail (326 NUL
+bytes after the last complete record) was truncated and the 306 records are intact. No final
+`outputs/degraded_feeler.csv` exists. The dropout and noise axes have **not** been flown and are on
+hold: with the feeler read every 1 kHz control tick and drops independent per tick, hold-last-value
+dropout leaves a ray stale for only 5 ms on average even at p = 0.8, so the dropout model is under
+review.
+
+**Setup:** FULL vs NO_WINGWASH on the corrected (true-wall) harness, primary 40-course ensemble,
+noise seed `1000 + course_id` matched across variants and levels (= pass 1 seed index 1), noise
+level 1.0, 1 kHz, no gains retuned. `feeler_range = X` makes any feeler reading beyond X m return
+clear; the idealized antenna reach is 0.16 m. Only the navigation feelers are degraded; the true
+ray-cast feeding the wing-wash wall planes is untouched. The idealized row is the seed-index-1 slice
+of `outputs/stats_pass1.csv`, not re-flown.
+
+**Definitions:** *strike-free* = reached the finish AND no wall strike anywhere in the run.
+*crashed* = wall strike anywhere in the run (a crashed flight may still reach the finish). Paired by
+course. CI is the T2 cluster bootstrap over courses (10,000 resamples, percentile,
+`default_rng(20261005)`); McNemar is exact, two-sided. This sweep was not pre-registered and the
+four levels are not corrected for multiplicity.
+
+| feeler range (m) | paired courses | FULL strike-free | NO_WINGWASH strike-free | paired diff (FULL - NO_WINGWASH) | 95% CI (pp) | discordant (FULL-only / NO_WINGWASH-only), McNemar p | FULL crashed | NO_WINGWASH crashed |
+|---|---|---|---|---|---|---|---|---|
+| idealized (0.16, pass 1 seed 1) | 40 | 32/40 | 32/40 | 0.0 pp | [-10.0, +10.0] | 2 / 2, p = 1.000 | 6/40 | 5/40 |
+| 0.12 | 40 | 30/40 | 31/40 | -2.5 pp | [-12.5, +7.5] | 2 / 3, p = 1.000 | 6/40 | 4/40 |
+| 0.08 | 40 | 31/40 | 31/40 | 0.0 pp | [-12.5, +12.5] | 3 / 3, p = 1.000 | 5/40 | 6/40 |
+| 0.05 | 40 | 25/40 | 18/40 | +17.5 pp | [0.0, +35.0] | 11 / 4, p = 0.118 | 14/40 | 17/40 |
+| 0.03 (incomplete) | 32 | 0/32 | 1/32 | -3.1 pp | [-9.4, 0.0] | 0 / 1, p = 1.000 | 32/32 | 31/32 |
+
+The 0.03 cell has 66 of 80 flights. Courses 29, 31, 32, 33, 36, 37, 38 and 39 lack one or both
+variants and are excluded from the paired row. Counting every 0.03 flight that finished: FULL 0/34
+strike-free with 34/34 crashed, NO_WINGWASH 1/32 strike-free with 31/32 crashed.
+
+Context, reached-goal counts (FULL / NO_WINGWASH): idealized 32 / 34, 0.12 31 / 33, 0.08 33 / 33,
+0.05 31 / 27, 0.03 12 / 12 of 32.
+
+**Range-axis verdict: NO - a wing-wash rescue of a range-limited feeler is not resolved; at 0.03 m
+it is BOTH-FAIL-TOGETHER.**
+
+- 0.12 and 0.08 m: the feeler is not meaningfully degraded (30-31/40 against 32/40 idealized) and
+  the variants are indistinguishable, so there is nothing to rescue.
+- 0.05 m: the only level where the variants separate. FULL 25/40 vs NO_WINGWASH 18/40, +17.5 pp,
+  11 vs 4 discordant courses. The direction is what a rescue would look like, but the CI lower bound
+  sits at 0.0 and McNemar p = 0.118, at one of four levels examined, so it is suggestive and not
+  established. FULL still loses 7 courses relative to idealized, so at most a partial rescue.
+- 0.03 m: both variants strike a wall in essentially every flight (FULL 0/32, NO_WINGWASH 1/32
+  strike-free). The 8 unpaired courses cannot change this: FULL could reach at most 8/40.
