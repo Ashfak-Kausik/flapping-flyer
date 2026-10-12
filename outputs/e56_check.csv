@@ -1,0 +1,2 @@
+set,cell,variant,course_id,seed_idx,noise_seed,kc_mult,feeler_range,n_legs,n_openings,completed,crashed,strike_free,min_clear_mm,n_detected,n_false_positives,loc_errors_mm,wall_s
+check,kc1,FULL,16,1,1016,1.0,,2,1,1,0,1,18.288938786767215,1,0,1.046,266.7
