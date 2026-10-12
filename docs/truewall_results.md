@@ -361,3 +361,39 @@ Scope: one degradation axis, one level, one noise seed per course.
 
 No gain is distinguishable from no wing-wash; higher gain changes more individual outcomes in both
 directions without a net benefit. Roll saturation (2.5 deg) was left in place.
+
+---
+
+## Table T7 - e57 corridor-width sweep (flown 2026-10-12 to 2026-10-13, analysed 2026-10-13)
+
+Plan written and committed before any flight: `docs/e57_analysis_plan.md` (SHA-256 printed at the
+top of `outputs/e57_runs.log`). Runner `experiments/e57_width_sweep.py`, analysis
+`experiments/e57_analysis.py`, 400 flights in `outputs/e57_runs.jsonl`, 200 complete pairs, none
+excluded. Undegraded feelers, three legs, one matched noise seed per course.
+
+**Primary (bands 52-58 and 46-52 mm pooled, 80 pairs): strike-free 0/80 vs 0/80**, no discordant
+pair, degenerate interval. The verdict rule returns NO MEANINGFUL ADVANTAGE, but the outcome is at
+its floor, so **the comparison is uninformative and must not be read as equivalence.** The plan
+did not anticipate a floor. Identical at the 13.6 mm strike radius.
+
+| band (mm) | strike-free F / N | difference | 95% CI | discordant | reached F / N | mean min-clearance F / N (mm) |
+|---|---|---|---|---|---|---|
+| 70-76 | 33/40 / 27/40 | +15.0 pp | [+2.5, +27.5] | 7 / 1 (p=0.07) | 33 / 32 | 21.57 / 19.65 |
+| 64-70 | 30/40 / 32/40 | -5.0 pp | [-15.0, +5.0] | 1 / 3 | 32 / 34 | 17.60 / 17.36 |
+| 58-64 | 24/40 / 22/40 | +5.0 pp | [-10.0, +20.0] | 6 / 4 | 31 / 33 | 13.76 / 13.39 |
+| 52-58 | 0/40 / 0/40 | 0 | - | 0 / 0 | 20 / 23 | 7.98 / 7.93 |
+| 46-52 | 0/40 / 0/40 | 0 | - | 0 / 0 | 17 / 7 | 5.88 / 4.51 |
+| all | 87/200 / 81/200 | +3.0 pp | [-1.5, +7.5] | 14 / 8 (p=0.29) | 133 / 129 | 13.36 / 12.57 |
+
+All rows other than the primary are descriptive, with no multiplicity correction.
+
+- No trend of the strike-free difference with width in the three bands where the outcome is not at
+  floor. The 70-76 mm interval excludes zero but is one of five uncorrected comparisons and the
+  adjacent band has the opposite sign.
+- The navigation layer as tuned does not fly corridors narrower than about 58 mm strike-free in
+  either configuration (24/40 at 58-64 mm, 0/40 at 52-58 mm).
+- Secondary observations, hypotheses only: goal-reaching in the 46-52 mm band 17/40 vs 7/40
+  (+25.0 pp, [+10.0, +40.0]); end-to-end detection in the 52-58 mm band 23/72 vs 31/72
+  (-11.1 pp, [-21.9, -2.6]); mean min-clearance over all pairs +0.79 mm [+0.21, +1.36].
+- **Not recorded:** where along the course the strikes occur. A rerun should log strike count and
+  location and use an outcome that is not at floor in narrow corridors.
