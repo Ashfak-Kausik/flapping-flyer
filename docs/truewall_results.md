@@ -326,3 +326,38 @@ no-wing-wash on the primary task.** No table resolves a difference between FULL 
   be informative as written: with the feeler refreshed at 1 kHz and drops independent per tick,
   hold-last-value dropout leaves a ray stale for about 5 ms on average even at p = 0.8. The 0.03 m
   range cell is also incomplete (66 of 80 flights). The checkpoint remains resumable.
+
+---
+
+## Tables T5 and T6 - e56 follow-ups (flown 2026-10-11 to 2026-10-12, analysed 2026-10-12)
+
+Plan written before any flight: `docs/e56_analysis_plan.md` (SHA-256 printed at the top of
+`outputs/e56_runs.log`, matching the committed file). Runner `experiments/e56_powered.py`, analysis
+`experiments/e56_analysis.py`, 761 flights in `outputs/e56_runs.jsonl`, none excluded. The harness
+check flight (course 16, seed index 1, FULL, 1x) reproduced the stored `stats_pass1` row exactly.
+
+### T5 - confirmatory test, feeler range 0.05 m, 200 new courses, one matched seed per course
+
+| metric | FULL | NO_WINGWASH | paired difference | 95% CI |
+|---|---|---|---|---|
+| strike-free | 124/200 | 91/200 | +16.5 pp | [+8.5, +25.0] |
+| reached | 146/200 | 122/200 | +12.0 pp | [+4.5, +19.5] |
+| detection, end to end | 218/320 | 168/320 | +15.6 pp | [+7.5, +23.9] |
+| mean min-clearance | 15.35 mm | 12.44 mm | +2.91 mm | [+2.09, +3.74] |
+
+Discordant pairs 54 / 21, exact McNemar p = 0.0002. **Verdict under the pre-specified rule:
+ADVANTAGE CONFIRMED.** This supersedes the "single-seed hint only" reading of the T4 0.05 m cell.
+Scope: one degradation axis, one level, one noise seed per course.
+
+### T6 - centring-gain sweep (exploratory), 40 primary courses x 3 seeds, undegraded feelers
+
+| Kc multiple | strike-free | difference vs 0x | 95% CI | discordant | mean min-clearance |
+|---|---|---|---|---|---|
+| 0x (NO_WINGWASH, from stats_pass1) | 91/120 | - | - | - | 17.57 mm |
+| 1x (FULL, from stats_pass1) | 92/120 | +0.8 pp | [-5.8, +7.5] | 7 / 6 | 17.88 mm |
+| 2x | 87/120 | -3.3 pp | [-11.7, +4.2] | 5 / 9 | 17.34 mm |
+| 4x | 90/120 | -0.8 pp | [-11.7, +9.2] | 13 / 14 | 17.12 mm |
+| 8x | 90/120 | -0.8 pp | [-13.3, +11.7] | 13 / 14 | 17.47 mm |
+
+No gain is distinguishable from no wing-wash; higher gain changes more individual outcomes in both
+directions without a net benefit. Roll saturation (2.5 deg) was left in place.

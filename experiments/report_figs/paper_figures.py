@@ -296,19 +296,30 @@ def fig11():
         assert (round(d, 1), round(lo, 1), round(hi, 1)) == T4[l], (l, d, lo, hi)
         rowsout.append((f"Feeler range {l:.2f} m" + ("\n(partial, 32 courses)" if N != 40 else "\n40 courses"), d, lo, hi, f"{f}/{N} vs {n_}/{N}",
                         mcnemar_exact(b, c), False, "T4, outputs/degraded_feeler.csv.partial.jsonl"))
+    # e56 Part A: confirmatory test at feeler range 0.05 m, 200 new courses, one matched seed per course
+    C = {}
+    for line in open("outputs/e56_runs.jsonl"):
+        r = json.loads(line)
+        if r["set"] == "confirm": C.setdefault(int(r["course_id"]), {})[r["variant"]] = int(r["strike_free"])
+    M = np.array([[v["FULL"], v["NO_WINGWASH"]] for _, v in sorted(C.items())], float); N = len(M)
+    f, n_ = int(M[:, 0].sum()), int(M[:, 1].sum()); b = int(((M[:, 0] == 1) & (M[:, 1] == 0)).sum()); c = int(((M[:, 0] == 0) & (M[:, 1] == 1)).sum())
+    d = 100 * (f - n_) / N; lo, hi = boot(M, lambda X: 100 * np.mean(X[:, 0] - X[:, 1]))
+    assert (f, n_, N, b, c) == (124, 91, 200, 54, 21) and (round(d, 1), round(lo, 1), round(hi, 1)) == (16.5, 8.5, 25.0)
+    rowsout.append(("Confirmatory, range 0.05 m\n200 new courses", d, lo, hi, f"{f}/{N} vs {n_}/{N}", mcnemar_exact(b, c), True, "e56, outputs/e56_runs.jsonl"))
     for lab, d, lo, hi, cts, p, pre, src in rowsout:
         print(f"  {lab.replace(chr(10), ' | '):48s} {d:+5.1f} pp  CI [{lo:+.1f}, {hi:+.1f}]  {cts}  McNemar p = {p:.3f}  "
-              f"{'pre-registered' if pre else 'not pre-registered'}  [{src}]")
-    print(f"  all values match docs/truewall_results.md T2/T3/T4 except the T3 interval (new); margin +/-{MARGIN:.0f} pp, "
+              f"{'pre-specified' if pre else 'not pre-specified'}  [{src}]")
+    print(f"  values match docs/truewall_results.md T2/T3/T4 (T3 interval computed here) and experiments/e56_analysis.py; margin +/-{MARGIN:.0f} pp, "
           f"{B} resamples, default_rng({RNG_SEED})")
-    fig = plt.figure(figsize=(7.1, 3.0)); ax = fig.add_axes([0.245, 0.16, 0.50, 0.76])
+    fig = plt.figure(figsize=(7.1, 3.4)); ax = fig.add_axes([0.235, 0.14, 0.47, 0.79])
     ax.axvspan(-MARGIN, MARGIN, color=LG, zorder=0); ax.axvline(0, color=K, lw=0.7, zorder=1)
     for i, (lab, d, lo, hi, cts, p, pre, _) in enumerate(rowsout):
         ax.plot([lo, hi], [i, i], color=K, lw=1.2, zorder=3)
         for e in (lo, hi): ax.plot([e, e], [i - 0.13, i + 0.13], color=K, lw=1.2, zorder=3)
         ax.plot(d, i, "o", ms=6, mfc=K if pre else "white", mec=K, mew=1.2, zorder=4)
-        ax.text(1.03, i, f"{cts}\n{d:+.1f} pp [{lo:+.1f}, {hi:+.1f}],  p = {p:.2f}", transform=ax.get_yaxis_transform(), va="center", ha="left",
+        ax.text(1.03, i, f"{cts}\n{d:+.1f} pp [{lo:+.1f}, {hi:+.1f}],  p = {p:.2f}" if p >= 0.01 else f"{cts}\n{d:+.1f} pp [{lo:+.1f}, {hi:+.1f}],  p = {p:.4f}", transform=ax.get_yaxis_transform(), va="center", ha="left",
                 fontsize=7, linespacing=1.3)
+    ax.axhline(len(rowsout) - 1.5, color=G2, lw=0.6, ls=(0, (2, 2)))
     ax.set_yticks(range(len(rowsout))); ax.set_yticklabels([r[0] for r in rowsout], fontsize=7.5); ax.set_ylim(len(rowsout) - 0.45, -0.75)
     ax.axhline(1.5, color=G2, lw=0.6, ls=(0, (2, 2)))
     ax.set_xlim(-22, 40); ax.set_xlabel("strike-free completion, FULL − NO_WINGWASH (percentage points, 95% CI)")
@@ -317,9 +328,9 @@ def fig11():
     for s in ("top", "right", "left"): ax.spines[s].set_visible(False)
     ax.tick_params(axis="y", length=0)
     L = plt.Line2D
-    ax.legend(handles=[L([], [], marker="o", ms=6, mfc=K, mec=K, ls="none", label="pre-registered"),
-                       L([], [], marker="o", ms=6, mfc="white", mec=K, mew=1.2, ls="none", label="not pre-registered, single seed")],
-              frameon=False, loc="lower right", handletextpad=0.3)
+    ax.legend(handles=[L([], [], marker="o", ms=6, mfc=K, mec=K, ls="none", label="pre-specified"),
+                       L([], [], marker="o", ms=6, mfc="white", mec=K, mew=1.2, ls="none", label="not pre-specified, single seed")],
+              frameon=False, loc="upper right", bbox_to_anchor=(1.0, 0.99), handletextpad=0.3, fontsize=7)
     save(fig, "fig11_paired_differences")
 
 

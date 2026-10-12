@@ -19,3 +19,14 @@ MUJOCO_LOG.TXT
 # Large binary / data files
 *.mjb
 *.bagmodels/flyer_corridor.xml
+
+# LaTeX build products
+*.aux
+*.bbl
+*.blg
+*.out
+*.spl
+paper_draft.log
+
+# Per-process model files left by interrupted parallel runs
+models/_e5*_*_*.xml
