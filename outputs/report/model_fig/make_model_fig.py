@@ -37,8 +37,8 @@ MM = 1e3
 
 # Things that are NOT in the model/source and therefore are choices, kept in one place:
 FEELER_ANGLES = [0, 30, -30, 50, -50, 90, -90]   # copied from experiments/e48_mission.py:77 (asserted below)
-EQ_KAPPA, EQ_TAUWALL = 11, 12                    # position of eq:kappa / eq:tauwall among the numbered
-                                                 # equations of report_draft.md (counted below, asserted)
+EQ_KAPPA, EQ_TAUWALL = 8, 9                      # position of eq:kappa / eq:tauwall among the numbered
+                                                 # equations of Paper/paper_draft.tex (counted below, asserted)
 SIDE = {+1: "left", -1: "right"}                 # x fwd, z up  =>  +y is LEFT (right-handed frame)
 
 plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 9, "mathtext.fontset": "dejavusans",
@@ -91,7 +91,7 @@ def read_values():
     V["feelers"] = FEELER_ANGLES
     # equation numbers: order of \label{eq:*} in the draft
     import re
-    labels = re.findall(r"\\label\{(eq:[^}]+)\}", open("report_draft.md").read())
+    labels = re.findall(r"\\label\{(eq:[^}]+)\}", open("Paper/paper_draft.tex").read())
     assert labels.index("eq:kappa") + 1 == EQ_KAPPA and labels.index("eq:tauwall") + 1 == EQ_TAUWALL
     return V
 
@@ -119,7 +119,7 @@ def report(V):
     P(f"  hover: f = {V['f_hz']} Hz, feather amp = {V['feather']} deg, stroke amp Phi = {V['amp']:.4f} deg")
     P(f"  feeler angles (deg, +left) = {V['feelers']}   max_range = {V['max_range']:.0f}")
     P(f"  K_GE = {V['K_GE']}   KAPPA_MAX = {V['KAPPA_MAX']}")
-    P(f"  eq:kappa -> ({EQ_KAPPA}), eq:tauwall -> ({EQ_TAUWALL})  [label order in report_draft.md]")
+    P(f"  eq:kappa -> ({EQ_KAPPA}), eq:tauwall -> ({EQ_TAUWALL})  [label order in Paper/paper_draft.tex]")
     txt = "\n".join(L); print(txt, flush=True)
     return txt
 

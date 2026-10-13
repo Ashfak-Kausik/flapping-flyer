@@ -23,7 +23,7 @@ OUT = "outputs/paper_figures"
 DATA = f"{OUT}/data"
 G2 = "#9a9a9a"
 WINGREACH_MM = 13.3            # src/safety.py WINGREACH = 0.0133 m (as in fig_b_clearance_boxplot.py)
-FULL_LBL, NOWW_LBL = "FULL (wing-wash + feelers)", "NO_WINGWASH (feelers only)"
+FULL_LBL, NOWW_LBL = "full (wing-wash + feelers)", "no wing-wash (feelers only)"
 
 
 def save(fig, stem):
@@ -250,7 +250,7 @@ def fig10():
             n = cnt[v][j]; h = 100 * n / den[j]
             ax.bar(i + (j - 1) * w, h, w * 0.92, fc=fc, ec=K, lw=0.8, label=lab if i == 0 else None, zorder=3)
             ax.text(i + (j - 1) * w, h + 1.5, f"{n}/{den[j]}", ha="center", va="bottom", fontsize=7)
-    ax.set_xticks(range(4)); ax.set_xticklabels(["FULL\n(wing-wash + feelers)", "NO_WINGWASH\n(feelers only)", "NO_FEELERS\n(wing-wash only)", "OPEN_LOOP\n(no sensing)"])
+    ax.set_xticks(range(4)); ax.set_xticklabels(["full\n(wing-wash + feelers)", "no wing-wash\n(feelers only)", "no feelers\n(forward ray kept)", "open-loop\n(no sensing)"])
     ax.set_ylabel("percent"); ax.set_ylim(0, 100); ax.tick_params(axis="x", length=0); clean(ax)
     ax.legend(frameon=False, ncol=3, loc="lower center", bbox_to_anchor=(0.5, 1.0), handlelength=1.4, columnspacing=1.6)
     save(fig, "fig10_ablation_truewall")
@@ -322,9 +322,9 @@ def fig11():
     ax.axhline(len(rowsout) - 1.5, color=G2, lw=0.6, ls=(0, (2, 2)))
     ax.set_yticks(range(len(rowsout))); ax.set_yticklabels([r[0] for r in rowsout], fontsize=7.5); ax.set_ylim(len(rowsout) - 0.45, -0.75)
     ax.axhline(1.5, color=G2, lw=0.6, ls=(0, (2, 2)))
-    ax.set_xlim(-22, 40); ax.set_xlabel("strike-free completion, FULL − NO_WINGWASH (percentage points, 95% CI)")
+    ax.set_xlim(-22, 40); ax.set_xlabel("strike-free completion, full − no wing-wash (percentage points, 95% CI)")
     ax.text(0, -0.62, f"±{MARGIN:.0f} pp margin", ha="center", va="center", fontsize=7, color=G)
-    ax.text(1.03, -0.62, "strike-free FULL vs NO_WINGWASH", transform=ax.get_yaxis_transform(), fontsize=7, color=G, va="center")
+    ax.text(1.03, -0.62, "strike-free, full vs no wing-wash", transform=ax.get_yaxis_transform(), fontsize=7, color=G, va="center")
     for s in ("top", "right", "left"): ax.spines[s].set_visible(False)
     ax.tick_params(axis="y", length=0)
     L = plt.Line2D
@@ -382,7 +382,7 @@ def fig13():
                    boxprops=dict(color=K, lw=0.9), whiskerprops=dict(color=K, lw=0.9), capprops=dict(color=K, lw=0.9))
         ax.plot(i, X.mean(), "D", ms=4, mfc="white", mec=K, mew=1.0, zorder=4)
     ax.axhline(WINGREACH_MM, color=K, lw=0.9, ls=(0, (4, 2))); ax.text(1.48, WINGREACH_MM - 0.5, f"wingtip-strike radius {WINGREACH_MM} mm", ha="right", va="top", fontsize=7)
-    ax.set_xticks([0, 1]); ax.set_xticklabels(["FULL", "NO_WINGWASH"]); ax.set_xlim(-0.5, 1.5); ax.set_ylim(0, None)
+    ax.set_xticks([0, 1]); ax.set_xticklabels(["full", "no wing-wash"]); ax.set_xlim(-0.5, 1.5); ax.set_ylim(0, None)
     ax.set_ylabel("minimum wall clearance per flight (mm)"); ax.tick_params(axis="x", length=0); clean(ax)
     save(fig, "fig13_clearance_truewall")
 

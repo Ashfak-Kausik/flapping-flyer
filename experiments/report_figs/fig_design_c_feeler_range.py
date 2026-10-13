@@ -59,8 +59,7 @@ def draw(ax, D):
             "NO_WINGWASH": dict(i=2, color=G, ls=(0, (5, 2)), marker="s", ms=4.6)}
     for name, s in spec.items():
         ax.plot(full, [pct(l, s["i"]) for l in full], color=s["color"], ls=s["ls"], lw=1.3, marker=s["marker"],
-                ms=s["ms"], mfc=s["color"], mec=s["color"], label=name.replace("NO_WINGWASH", "NO_WINGWASH (feelers only)")
-                .replace("FULL", "FULL (wing-wash + feelers)") if name == "FULL" else "NO_WINGWASH (feelers only)", zorder=4)
+                ms=s["ms"], mfc=s["color"], mec=s["color"], label="full (wing-wash + feelers)" if name == "FULL" else "no wing-wash (feelers only)", zorder=4)
         for l in part:
             ax.plot([full[-1], l], [pct(full[-1], s["i"]), pct(l, s["i"])], color=s["color"], ls=(0, (1, 2)), lw=1.1, zorder=3)
             ax.plot(l, pct(l, s["i"]), marker=s["marker"], ms=s["ms"], mfc="white", mec=s["color"], mew=1.2, ls="none", zorder=5)

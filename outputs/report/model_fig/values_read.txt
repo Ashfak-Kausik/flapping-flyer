@@ -21,4 +21,4 @@ VALUES READ FROM MODEL / SOURCE (mm unless stated)
   hover: f = 80 Hz, feather amp = 45 deg, stroke amp Phi = 72.6305 deg
   feeler angles (deg, +left) = [0, 30, -30, 50, -50, 90, -90]   max_range = 160
   K_GE = 1.0   KAPPA_MAX = 2.0
-  eq:kappa -> (11), eq:tauwall -> (12)  [label order in report_draft.md]
+  eq:kappa -> (8), eq:tauwall -> (9)  [label order in Paper/paper_draft.tex]
