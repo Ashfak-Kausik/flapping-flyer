@@ -1,179 +1,44 @@
-
-%% 
-%% Copyright 2007-2020 Elsevier Ltd
-%% 
-%% This file is part of the 'Elsarticle Bundle'.
-%% ---------------------------------------------
-%% 
-%% It may be distributed under the conditions of the LaTeX Project Public
-%% License, either version 1.2 of this license or (at your option) any
-%% later version.  The latest version of this license is in
-%%    http://www.latex-project.org/lppl.txt
-%% and version 1.2 or later is part of all distributions of LaTeX
-%% version 1999/12/01 or later.
-%% 
-%% The list of all files belonging to the 'Elsarticle Bundle' is
-%% given in the file `manifest.txt'.
-%% 
-
-%% Template article for Elsevier's document class `elsarticle'
-%% with numbered style bibliographic references
-%% SP 2008/03/01
+%% Reactive Aerodynamic Sensing and Navigation for a Bio-Inspired Flapping-Wing
+%% Micro Air Vehicle in Perception-Denied Confined Spaces
 %%
-%% $Id: elsarticle-template-num.tex 190 2020-11-23 11:12:32Z rishi $
-%%
-%\documentclass[preprint,12pt]{elsarticle}
-
-
-%\documentclass[final,twocolumn, 3p]{elsarticle}
-
-%% Use the option review to obtain double line spacing
-%% \documentclass[authoryear,preprint,review,12pt]{elsarticle}
-
-%% Use the options 1p,twocolumn; 3p; 3p,twocolumn; 5p; or 5p,twocolumn
-%% for a journal layout:
-%% \documentclass[final,1p,times]{elsarticle}
-%% \documentclass[final,1p,times,twocolumn]{elsarticle}
-%% \documentclass[final,3p,times]{elsarticle}
-%% \documentclass[final,3p,times,twocolumn]{elsarticle}
-%% \documentclass[final,5p,times]{elsarticle}
-%% \documentclass[final,5p,times,twocolumn]{elsarticle}
-
-%% For including figures, graphicx.sty has been loaded in
-%% elsarticle.cls. If you prefer to use the old commands
-%% please give \usepackage{epsfig}
-
-
-%% The amsthm package provides extended theorem environments
-%% \usepackage{amsthm}
-
-%% 
-%% Copyright 2007-2020 Elsevier Ltd
-%% 
-%% This file is part of the 'Elsarticle Bundle'.
-%% ---------------------------------------------
-%% 
-%% It may be distributed under the conditions of the LaTeX Project Public
-%% License, either version 1.2 of this license or (at your option) any
-%% later version.  The latest version of this license is in
-%%    http://www.latex-project.org/lppl.txt
-%% and version 1.2 or later is part of all distributions of LaTeX
-%% version 1999/12/01 or later.
-%% 
-%% The list of all files belonging to the 'Elsarticle Bundle' is
-%% given in the file `manifest.txt'.
-%% 
-
-%% Template article for Elsevier's document class `elsarticle'
-%% with numbered style bibliographic references
-%% SP 2008/03/01
-%%
-
-%% $Id: elsarticle-template-num.tex 190 2020-11-23 11:12:32Z rishi $
-%%
-%\documentclass[preprint,5pt]{elsarticle}
+%% Single source of the paper. Build from this folder:
+%%     latexmk -pdf paper_draft.tex
+%% Inputs: references.bib, figures/
 
 \documentclass[final,5p,times]{elsarticle}
 
-%% Use the option review to obtain double line spacing
-%% \documentclass[authoryear,preprint,review,12pt]{elsarticle}
-
-%% Use the options 1p,twocolumn; 3p; 3p,twocolumn; 5p; or 5p,twocolumn
-%% for a journal layout:
-%% \documentclass[final,1p,times]{elsarticle}
-%% \documentclass[final,1p,times,twocolumn]{elsarticle}
-%% \documentclass[final,3p,times]{elsarticle}
-%% \documentclass[final,3p,times,twocolumn]{elsarticle}
-%% \documentclass[final,5p,times]{elsarticle}
-%% \documentclass[final,5p,times,twocolumn]{elsarticle}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Added packages and macros
-%===================================
-% \graphicspath{{figures/}}
-% \usepackage{pifont}
-% \newcommand{\cmark}{\ding{51}}
-
-\usepackage{makecell}
-\usepackage{pifont}
-\usepackage{amssymb,amsmath, latexsym, bm, amsfonts}
-\usepackage{algorithm, algcompatible}
-\usepackage{textcomp}
+\usepackage{amsmath, amssymb, bm}
 \usepackage{xcolor}
-\usepackage{balance}
 \usepackage{subcaption}
-\usepackage{gensymb}
-\usepackage{multirow, array, ragged2e, lscape, eqparbox, xspace, setspace}
-\usepackage{array, rotating,  threeparttable, booktabs, longtable, tabularx,tabulary}
-\usepackage{natbib, url}
-\usepackage{lipsum}
+\usepackage{array, booktabs, tabularx, threeparttable}
 \usepackage{enumitem}
 \setlist[itemize]{topsep=2pt, left=0pt, itemsep=2pt, parsep=0pt}
-\usepackage{algpseudocode}
+\usepackage{url}
 
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds}
+\usetikzlibrary{arrows.meta, positioning, calc}
 
 \usepackage{flushend}
-\makeatletter
-\newcommand\singlelipsum[1]{%
-  \begingroup\let\lips@par\relax\csname lipsum@\@roman{#1}\endcsname
-\endgroup }
-\makeatother
-
-
-
-\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
-		T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
-
 
 \pdfminorversion=6
-%\usepackage{cmap, colortbl}
-
-\usepackage{hyperref}	%pageanchor=false,
-\hypersetup{colorlinks, breaklinks, citecolor=blue, urlcolor=black, linkcolor=black}
-% to display URLs in blue roman font according to Springer's eBook style:
-% \renewcommand\UrlFont{\colour{blue}\rmfamily}
 \pdfsuppresswarningpagegroup=1
-% \newcommand*{\email}[1]{\normalsize\texttt{\href{mailto:#1}{#1}}\par}
+\usepackage{hyperref}
+\hypersetup{colorlinks, breaklinks, citecolor=blue, urlcolor=black, linkcolor=black}
 
-
-\pdfminorversion=6
-%\makeatother
-\usepackage{hyphenat}
-\def\hyph{-\penalty0\hskip0pt\relax}
 \sloppy
 
-%\usepackage{enumitem}
-\newcommand{\func}[1]{\ensuremath{{\tt #1}\left(\cdot\right)}}
-\newcommand{\funcc}[2]{\ensuremath{{\tt #1}\left({#2}\right)}}
-\renewcommand{\vec}[1]{\mathbf{#1}}
-\newcommand*{\email}[1]{\normalsize\texttt{\href{mailto:#1}{#1}}\par}
-
+% table column types: fixed-width left / centred / right, and ragged tabularx column
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
 \newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
-% \setlength\extrarowheight{10pt}
-%==============================
-% \newcolumntype{b}{X}
-% \newcolumntype{s}{>{\hsize=.5\hsize}X}
-\newcommand{\heading}[1]{\multicolumn{1}{c}{#1}}
-\makeatletter
-\DeclareRobustCommand\onedot{\futurelet\@let@token\@onedot}
-\def\@onedot{\ifx\@let@token.\else.\null\fi\xspace}
-\def\eg{\emph{e.g}\onedot} \def\Eg{\emph{E.g}\onedot}
-\def\ie{\emph{i.e}\onedot} \def\Ie{\emph{I.e}\onedot}
-\def\cf{\emph{c.f}\onedot} \def\Cf{\emph{C.f}\onedot}
-\def\etc{\emph{etc}\onedot} \def\vs{\emph{vs}\onedot}
-\def\wrt{w.r.t\onedot} \def\dof{d.o.f\onedot}
-\def\etal{\emph{et al}\onedot}
-\makeatother
 
-%% ============================================
-%% DOCUMENT BEGINS
-%% ============================================
+% no "Preprint submitted to ..." line or date in the first-page footer
+\makeatletter
+\def\ps@pprintTitle{%
+  \let\@oddhead\@empty \let\@evenhead\@empty
+  \def\@oddfoot{}\let\@evenfoot\@oddfoot}
+\makeatother
 
 \begin{document}
 
@@ -184,17 +49,8 @@
 \author[inst1]{MD Ashfakul Karim Kausik\corref{cor1}}
 \ead{ashfakkausik65@gmail.com}
 
-\author[inst2]{Naymul Siddque}
-\ead{tahsin92refat@gmail.com}
-
-\author[inst3]{Md Sayem Hossain Bhuiyan}
-\ead{alvi676@gmail.com}
-
-\author[inst3]{Tareque Bashar Ovi}
-\ead{ovitareque@gmail.com}
-
-\author[inst4]{Md Ahsan Kabir\corref{cor1}}
-\ead{ahsan@eece.mist.ac.bd}
+\author[inst2]{Md Sayem Hossain Bhuiyan\corref{cor1}}
+\ead{sayem@me.mist.ac.bd}
 
 \cortext[cor1]{Corresponding authors}
 
@@ -204,17 +60,7 @@
                     country={Bangladesh}}
 
 \affiliation[inst2]{organization={Military Institute of Science and Technology},
-                    addressline={Department of Computer Science},
-                    city={Dhaka},
-                    country={Bangladesh}}
-
-\affiliation[inst3]{organization={Khulna University of Engineering and Technology},
-                    addressline={Department of Electronics and Communication Engineering},
-                    city={Khulna},
-                    country={Bangladesh}}
-
-\affiliation[inst4]{organization={Military Institute of Science and Technology},
-                    addressline={Department of Electrical, Electronic and Communication Engineering},
+                    addressline={Department of Mechanical Engineering},
                     city={Dhaka},
                     country={Bangladesh}}
 
@@ -238,26 +84,26 @@ Flapping-wing micro air vehicle \sep Bio-inspired robotics \sep Reactive navigat
 \section{Introduction}
 \label{sec:introduction}
 
-Small flying robots are often most needed in places where they can sense the least. The interior voids of a collapsed building, the ducts and crawlspaces of an industrial plant, and the damaged compartments of a containment structure are all confined, cluttered, and frequently dark and dust-laden, and they usually lie beyond the reach of satellite positioning. These conditions degrade or disable the sensors on which aerial autonomy normally depends, such as cameras and laser scanners, exactly where a robot would be most useful. At the same time, only a very small vehicle can enter such spaces, and a small vehicle has little mass and power budget to carry sensors at all. The result is a tension between the size needed to enter a confined space and the sensing needed to operate within it \cite{floreano2015science}.
+Small flying robots (specifically, termed as Micro Vehicles \cite{xiao2021review}) are often most needed in places where they can sense the least. The interior voids of a collapsed building, the ducts and crawlspaces of an industrial plant, and the damaged compartments of a containment structure are all confined, cluttered, and frequently dark and dust-laden, and they usually lie beyond the reach of satellite positioning \cite{ebadi2024slam, tranzatto2022cerberus}. These conditions degrade or disable the sensors on which aerial autonomy normally depends, such as cameras and laser scanners, exactly where a robot would be most useful. At the same time, only a very small vehicle can enter such spaces, and a small vehicle has little mass and power budget to carry sensors at all. The result is a tension between the size needed to enter a confined space and the sensing needed to operate within it \cite{floreano2015science}.
 
-Bio-inspired flapping-wing micro air vehicles (FWMAVs) are attractive for this setting. At insect scale they are very light, so the downwash needed to support them carries far less momentum than that of even a small rotorcraft, and they disturb loose dust and contaminants correspondingly less \cite{floreano2015science}. Over the past two decades such vehicles have progressed from the first at-scale robotic insect to take off \cite{wood2008first}, to the first controlled flight of an insect-scale vehicle \cite{ma2013controlled}, and to untethered, power-autonomous flight \cite{jafferis2019untethered}. A recurring and still largely open question, however, is how such a vehicle should perceive a confined space when it cannot carry a conventional sensor payload. One idea, inspired by biology, is that a flapping-wing vehicle might sense nearby surfaces through the same aerodynamics that it already uses to fly, rather than through an added sensor.
+Bio-inspired flapping-wing micro air vehicles (FWMAVs) are attractive for this setting, which was first introduced by UC Berkeley from the team of Fearing et al.\ in 2000 (they were the first to introduce first successful bio-inspired flapping-wing prototypes)\cite{fearing2000wing}. At insect scale FWMAVs are very light, so the downwash needed to support them carries far less momentum than that of even a small rotorcraft, and they disturb loose dust and contaminants correspondingly less \cite{floreano2015science}. Over the past two decades such vehicles have progressed from the first at-scale robotic insect to take off \cite{wood2008first}, to the first controlled flight of an insect-scale vehicle \cite{ma2013controlled}, and to untethered, power-autonomous flight \cite{jafferis2019untethered}. A recurring and still largely open question, however, is how such a vehicle should perceive a confined space when it cannot carry a conventional sensor payload. One idea, inspired by biology, is that a flapping-wing vehicle might sense nearby surfaces through the same aerodynamics that it already uses to fly, rather than through an added sensor.
 
 \subsection{Background and Motivation}
 \label{sec:background}
 
-A wing operating close to a surface experiences a change in the forces it produces, an effect long studied in rotorcraft and known as the aerodynamic ground effect \cite{cheeseman1955}. For a flapping vehicle, when one wing is nearer a wall than the other, this effect is asymmetric, and the difference produces a small rolling moment that depends on the distance to the wall. In principle this moment is available to the vehicle without any dedicated sensor, because a flight controller that already estimates external disturbances in order to reject them is, in effect, already measuring it. This study refers to the resulting signal as the ``wing-wash'' signal. The idea that a flying animal can perceive surfaces from its own induced airflow is well supported in biology: nocturnal mosquitoes have been shown to divert away from walls and ground using mechanosensory cues from their self-generated flow, and this principle has been reproduced on a small quadcopter fitted with pressure probes \cite{nakata2020}. Tactile sensing provides a second, complementary biological precedent, as the antenna-based wall-following of the cockroach has been formalized and transferred to mobile robots \cite{lee2008templates}.
+A wing operating close to a surface experiences a change in the forces it produces, an effect long studied in rotorcraft and known as the aerodynamic ground effect \cite{cheeseman1959effect, leishman2006principles, sanchez2017characterization}. For a flapping vehicle beside a wall, the same effect would be expected to act unequally on the two wings, because the near wing lies closer to the surface than the far wing. And that difference would produce a small rolling moment that depends on the distance to the wall. Distance-dependent force changes near a surface are well documented for flapping wings \cite{maeda2013ground, lu2016ground}, and forces and moments near a wall have been measured on small rotorcraft \cite{franzetti2024ground}; to the authors' knowledge, however, such a moment has not been demonstrated on a flapping-wing vehicle, and one hardware study found no obvious wall effect in its sensing feedback \cite{tu2019acting}. In principle this moment is available to the vehicle without any dedicated sensor, because a flight controller that already estimates external disturbances in order to reject them is, in effect, already measuring it. This study refers to the resulting signal as the ``wing-wash'' signal. The idea that a flying animal can perceive surfaces from its own induced airflow is well supported in biology: nocturnal mosquitoes have been shown to divert away from walls and ground using mechanosensory cues from their self-generated flow, and this principle has been reproduced on a small quadcopter fitted with pressure probes \cite{nakata2020aerodynamic}. Tactile sensing provides a second, complementary biological precedent, as the antenna-based wall-following of the cockroach has been formalized and transferred to mobile robots \cite{lee2008templates}.
 
-The motivation for studying this aerodynamic sense carefully, rather than assuming it to be useful, comes from the one prior hardware study that attempted something closely related. In that work, a flapping-wing vehicle intended to navigate tight spaces was found, on the physical platform, to show no obvious wall effect in the motor-current feedback used for sensing, and the authors used direct wing contact for sensing instead \cite{actingIsSeeing2019}. This does not settle the question, since it concerns one platform and one set of conditions, but it does caution against treating the usefulness of an aerodynamic proximity sense as obvious. It also points to a distinction that is easy to overlook: a signal may be accurately measurable and yet contribute little to a task, if another sensing channel already supplies what the task needs. To the authors' knowledge, this distinction has not been examined directly for a flapping-wing vehicle, and it is the central concern of the present study.
+The motivation for studying this aerodynamic sense carefully, rather than assuming it to be useful, comes from the one prior hardware study that attempted something closely related. In that work, a flapping-wing vehicle intended to navigate tight spaces was found, on the physical platform, to show no obvious wall effect in the motor-current feedback used for sensing, and the authors used direct wing contact for sensing instead \cite{tu2019acting}. This does not settle the question, since it concerns one platform and one set of conditions, but it does caution against treating the usefulness of an aerodynamic proximity sense as obvious. It also points to a distinction that is easy to overlook: a signal may be accurately measurable and yet contribute little to a task, if another sensing channel already supplies what the task needs. To the authors' knowledge, this distinction has not been examined directly for a flapping-wing vehicle, and it is the central concern of the present study.
 
 \subsection{Problem Statement}
 \label{sec:problem}
 
-A flapping-wing vehicle operating in a confined, perception-denied space must, at minimum, keep itself centred in a passage, negotiate corners and junctions, and recognize openings in the walls, all without vision, without external positioning, and without a sensor payload that its mass budget cannot support. The wing-wash signal described above is present on any flapping-wing vehicle by virtue of its propulsion, and a lightweight feeler is a well-established complementary cue \cite{lee2008templates}. Two questions therefore arise, and they are distinct. The first is whether the wall-induced aerodynamic disturbance can be characterized as a proximity sensing modality in its own right, with a defined range, resolution, and dynamic response. The second, which does not follow from the first, is whether that signal is of practical value to a vehicle that also carries a tactile feeler, since a measurement may be accurate yet redundant. A system evaluated only in its complete configuration cannot answer the second question, because the contribution of any one channel is then hidden. This study addresses both questions within a physics-based simulation, and treats the second as the more consequential of the two.
+A flapping-wing vehicle operating in a confined, perception-denied space must, at minimum, keep itself centered in a passage, negotiate corners and junctions, and recognize openings in the walls, all without vision, without external positioning, and without a sensor payload that its mass budget cannot support. The wing-wash signal described above is present on any flapping-wing vehicle by virtue of its propulsion, and a lightweight feeler is a well-established complementary cue \cite{lee2008templates}. Two questions therefore arise, and they are distinct. The first is whether the wall-induced aerodynamic disturbance can be characterized as a proximity sensing modality in its own right, with a defined range, resolution, and dynamic response. The second, which does not follow from the first, is whether that signal is of practical value to a vehicle that also carries a tactile feeler, since a measurement may be accurate yet redundant. A system evaluated only in its complete configuration cannot answer the second question, because the contribution of any one channel is then hidden. This study addresses both questions within a physics-based simulation, and treats the second as the more consequential of the two.
 
 \subsection{Aims, Goals, and Objectives}
 \label{sec:aims}
 
-The overall aim of this study is to determine what a flapping wing's near-wall aerodynamic interaction can and cannot contribute to reactive navigation and inspection in confined, perception-denied spaces, using only a classical control system, and to report the result without overstating it. The study is conducted entirely in simulation; no hardware experiment is performed, and the transfer of any result to a physical vehicle is treated as an open question rather than a demonstrated fact. To pursue this aim, the specific objectives are as follows.
+The overall aim of this study is to determine what a flapping wing's near-wall aerodynamic interaction can and cannot contribute to reactive navigation and inspection in confined, perception-denied spaces, using only a classical control system, and to report the result without overstating it. Inspired by the work of Nakata et al.\ 2020 \cite{nakata2020aerodynamic}. The study is conducted entirely in simulation; no hardware experiment is performed, and the transfer of any result to a physical vehicle is treated as an open question rather than a demonstrated fact. To pursue this aim, the specific objectives are as follows.
 
 \begin{itemize}
     \item To model an insect-scale flapping-wing vehicle and its near-wall aerodynamics within a rigid-body physics engine, and to establish a control-only flight system, based on a linear-quadratic-Gaussian regulator with a disturbance observer, that achieves stable hovering and cruising flight.
@@ -274,9 +120,9 @@ This study makes the following contributions, the last of which the authors rega
 
 \begin{itemize}
     \item \textbf{A control-only flapping-wing platform for reactive confined-space navigation:} The study develops a 77.4~mg simulated flapping-wing vehicle, of 27.2~mm tip-to-tip span, that achieves stable flight and reactively negotiates confined corridors using a classical control architecture alone, with no learned policy, planner, map, or external positioning.
-    \item \textbf{Characterization of a ``free'' aerodynamic proximity signal:} The wall-induced roll disturbance, recovered from the vehicle's own disturbance observer at no additional sensing cost, is characterized as a proximity instrument that is resolvable from approximately 8 to 40~mm, of which about 13 to 40~mm lies beyond the wingtip-strike radius and can be flown, with a sub-millimetre noise-equivalent distance over most of that band under the adopted noise model, together with its observer gain and two-wall response. Each reported property is classified by its evidential status in Table~\ref{tab:evidence}, so that a model-encoded property, such as the exact two-wall superposition, is not presented as a discovered aerodynamic fact.
+    \item \textbf{Characterization of a ``free'' aerodynamic proximity signal:} The wall-induced roll disturbance, recovered from the vehicle's own disturbance observer at no additional sensing cost, is characterized as a proximity instrument that is resolvable from approximately 8 to 40~mm, of which about 13 to 40~mm lies beyond the wingtip-strike radius and can be flown, with a sub-millimeter noise-equivalent distance over most of that band under the adopted noise model, together with its observer gain and two-wall response. Each reported property is classified by its evidential status in Table~\ref{tab:evidence}, so that a model-encoded property, such as the exact two-wall superposition, is not presented as a discovered aerodynamic fact.
     \item \textbf{A reactive gap-versus-path inspection capability, evaluated across a randomized ensemble:} The integrated system detects isolated wall openings from about 12~mm and localizes those up to 35~mm long to within about a millimetre in a straight corridor; on multi-turn courses the mean localization error is 7.9~mm. The system is evaluated not on a single hand-designed route but across 40 independently generated multi-turn courses, with navigation and inspection outcomes reported in both their conditional and their end-to-end forms.
-    \item \textbf{A controlled, statistically grounded ablation establishing a conditional measurability-versus-utility dissociation:} By removing each sensing channel in turn on geometrically identical courses, and by subjecting the central comparison to a pre-specified paired analysis, the study detects no contribution of the aerodynamic channel to the primary task when the feelers are idealized, with a confidence interval that bounds any benefit at about 6.5 percentage points but does not establish formal equivalence, while removing the tactile channel more than halves goal-reaching. A further search across leg count, feeler range, and centring gain then yields one hypothesis, which a confirmatory test on 200 new courses supports: with the feeler range limited to 0.05~m, the aerodynamic channel raises strike-free completion by 16.5 percentage points. The honest delineation of where a measurable sense does and does not earn its place is the central finding of the work.
+    \item \textbf{A controlled, statistically grounded ablation establishing a conditional measurability-versus-utility dissociation:} By removing each sensing channel in turn on geometrically identical courses, and by subjecting the central comparison to a pre-specified paired analysis, the study detects no contribution of the aerodynamic channel to the primary task when the feelers are idealized, with a confidence interval that bounds any benefit at about 6.5 percentage points but does not establish formal equivalence, while removing the tactile channel more than halves goal-reaching. A further search across leg count, feeler range, and centering gain then yields one hypothesis, which a confirmatory test on 200 new courses supports: with the feeler range limited to 0.05~m, the aerodynamic channel raises strike-free completion by 16.5 percentage points. The honest delineation of where a measurable sense does and does not earn its place is the central finding of the work.
 \end{itemize}
 
 The remainder of this paper is organized as follows. Section~\ref{sec:relatedwork} reviews the related literature and identifies the gap addressed. Section~\ref{sec:methodology} presents the vehicle model, the aerodynamic and near-wall models, the control and estimation architecture, the reactive navigation layer, and the experimental and statistical design. Section~\ref{sec:results} reports the characterization of the aerodynamic signal, the navigation and inspection outcomes, and the sensory-channel ablation with its statistical analysis. Section~\ref{sec:discussion} interprets the findings and states their limitations and the directions for further study, and Section~\ref{sec:conclusion} concludes.
@@ -315,43 +161,43 @@ First untethered flight of an insect-scale vehicle, removing the tether constrai
 Supports the feasibility of payload-free operation that this study assumes for the vehicle. \\
 
 FWMAV design &
-\cite{phan2017} &
+\cite{phan2017design} &
 Built a 21~g tailless flapping-wing vehicle with angular-rate feedback. &
 Stable hovering of a tailless design using simple onboard feedback. &
 Confirms that feedback stabilization, not learning, suffices for stable flapping flight. \\
 
 FWMAV control &
-\cite{karasek2018} &
+\cite{karasek2018tailless} &
 Developed the 29~g DelFly Nimble, controlled entirely through wing-motion adjustment. &
 Agile free flight and a biological finding on torque coupling in banked turns. &
 Example of perception directed at flight control rather than environmental sensing. \\
 
 Near-wall aerodynamics &
-\cite{cheeseman1955} &
+\cite{cheeseman1959effect} &
 Derived the classical rotor ground-effect relation for a lifting surface near a surface. &
 Foundational analytic model of distance-dependent lift modification near a boundary. &
 Provides the functional form adopted for the near-wall law in this study. \\
 
 Near-wall aerodynamics &
-\cite{maeda2013} &
+\cite{maeda2013ground} &
 Computationally studied fruit-fly hovering in ground effect in three dimensions. &
 Showed distance-dependent force modification for an insect-scale flapping wing. &
 Supports the physical plausibility of the modelled wall interaction at this scale. \\
 
 Near-wall aerodynamics &
-\cite{lua2016} &
+\cite{lu2016ground} &
 Studied ground effect on three-dimensional hovering wings experimentally and numerically. &
 Identified three force regimes (enhancement, reduction, recovery) with clearance. &
 Shows force regimes that the simple enhancement law adopted in this study does not reproduce. \\
 
 Aerodynamic sensing &
-\cite{nakata2020} &
+\cite{nakata2020aerodynamic} &
 Showed mosquitoes sense surfaces from self-induced airflow and built a quadcopter detector. &
 Demonstrated aerodynamic surface sensing on a real flyer and a rotorcraft. &
 Establishes the idea is real and useful; this study asks whether it helps once a tactile cue exists. \\
 
 Flapping-wing sensing &
-\cite{actingIsSeeing2019} &
+\cite{tu2019acting} &
 Used wing-loading current to sense ground, walls, and obstacles on a flapping robot. &
 Vision-free tight-space navigation using actuator-loading cues. &
 Reported no obvious wall effect in motor-current feedback on hardware and used wing contact; central motivation for this study. \\
@@ -363,7 +209,7 @@ Template models for lightweight, vision-free tactile wall-following. &
 Basis for the feeler channel used alongside the aerodynamic signal. \\
 
 Disturbance estimation &
-\cite{chen2016disturbance} &
+\cite{chen2015disturbance} &
 Surveyed disturbance-observer-based control and related estimation methods. &
 Comprehensive overview of estimating and compensating external disturbances. &
 Underlies reinterpreting the controller's disturbance estimate as an environmental cue. \\
@@ -375,22 +221,22 @@ Underlies reinterpreting the controller's disturbance estimate as an environment
 \subsection{Flapping-Wing Micro Air Vehicles and Their Control}
 \label{sec:rw_fwmav}
 
-Research on flapping-wing micro air vehicles (FWMAVs) has advanced considerably over the past two decades. At insect scale, the Harvard RoboBee demonstrated the first takeoff of an at-scale robotic insect \cite{wood2008first}, followed by the first controlled flight of an insect-scale vehicle \cite{ma2013controlled} and, later, untethered and power-autonomous flight \cite{jafferis2019untethered}. At larger scales, motor-driven designs such as the tailless KUBeetle achieved stable hovering flight using wing-rotation modulation and simple feedback control \cite{phan2017}, and the DelFly Nimble, a 29~g tailless flapping-wing robot of 33~cm wingspan, demonstrated agile free flight controlled entirely through adjustments of its flapping wings \cite{karasek2018}. A common theme across these platforms is that the vehicle is intrinsically unstable and underactuated, and that stable flight requires active feedback control under severe mass and power constraints \cite{phan2017, karasek2018}. In nearly all cases the onboard perception, where present, has been directed toward stabilizing flight, and, where the payload allowed, toward carrying a camera, rather than toward sensing the surrounding environment through the flapping aerodynamics themselves. The present study adopts a classical linear-quadratic-Gaussian controller with a disturbance observer, in the same spirit of feedback stabilization, but examines whether the controller's own disturbance estimate can additionally serve as an environmental sense.
+Research on flapping-wing micro air vehicles (FWMAVs) has advanced considerably over the past two decades. At insect scale, the Harvard RoboBee demonstrated the first takeoff of an at-scale robotic insect \cite{wood2008first}, followed by the first controlled flight of an insect-scale vehicle \cite{ma2013controlled} and, later, untethered and power-autonomous flight \cite{jafferis2019untethered}. At larger scales, motor-driven designs such as the tailless KUBeetle achieved stable hovering flight using wing-rotation modulation and simple feedback control \cite{phan2017design}, and the DelFly Nimble, a 29~g tailless flapping-wing robot of 33~cm wingspan, demonstrated agile free flight controlled entirely through adjustments of its flapping wings \cite{karasek2018tailless}. A common theme across these platforms is that the vehicle is intrinsically unstable and underactuated, and that stable flight requires active feedback control under severe mass and power constraints \cite{phan2017design, karasek2018tailless}. In nearly all cases the onboard perception, where present, has been directed toward stabilizing flight, and, where the payload allowed, toward carrying a camera, rather than toward sensing the surrounding environment through the flapping aerodynamics themselves. The present study adopts a classical linear-quadratic-Gaussian controller with a disturbance observer, in the same spirit of feedback stabilization, but examines whether the controller's own disturbance estimate can additionally serve as an environmental sense.
 
 \subsection{Aerodynamics of Flapping Wings Near Surfaces}
 \label{sec:rw_groundeffect}
 
-The interaction between a lifting surface and a nearby boundary, known as the aerodynamic ground effect, is a classical topic in rotorcraft aerodynamics \cite{cheeseman1955}, and it has been studied specifically for flapping-wing flight at the low Reynolds numbers characteristic of insects. Computational studies of fruit-fly hovering have shown that a nearby ground alters the produced forces in a manner that depends on the distance to the surface \cite{maeda2013}. A recurring finding in this literature is that, as the wing approaches a surface, the cycle-averaged forces do not change monotonically but instead pass through three regimes with decreasing clearance, namely force enhancement, force reduction, and force recovery \cite{lua2016}. This three-regime behaviour bounds what the present work can claim. The law adopted here is a monotonic enhancement with a cap and contains no force-reduction regime, so the saturation seen when the modelled signal is characterized at very close range, reported in Section~\ref{sec:results_sensor}, is a consequence of that cap and not a reproduction of these regimes. Within the FWMAV community, the near-wall interaction has most often been treated as a disturbance to be compensated rather than as a signal to be exploited. The present study adopts a simple model of this interaction, stated explicitly in Section~\ref{sec:method_wingwash}, and asks whether its asymmetric, left-right form can serve as a lateral proximity cue.
+The interaction between a lifting surface and a nearby boundary, known as the aerodynamic ground effect, is a classical topic in rotorcraft aerodynamics \cite{cheeseman1959effect}, and it has been studied specifically for flapping-wing flight at the low Reynolds numbers characteristic of insects. Computational studies of fruit-fly hovering have shown that a nearby ground alters the produced forces in a manner that depends on the distance to the surface \cite{maeda2013ground}. A recurring finding in this literature is that, as the wing approaches a surface, the cycle-averaged forces do not change monotonically but instead pass through three regimes with decreasing clearance, namely force enhancement, force reduction, and force recovery \cite{lu2016ground}. This three-regime behaviour bounds what the present work can claim. The law adopted here is a monotonic enhancement with a cap and contains no force-reduction regime, so the saturation seen when the modelled signal is characterized at very close range, reported in Section~\ref{sec:results_sensor}, is a consequence of that cap and not a reproduction of these regimes. Within the FWMAV community, the near-wall interaction has most often been treated as a disturbance to be compensated rather than as a signal to be exploited. The present study adopts a simple model of this interaction, stated explicitly in Section~\ref{sec:method_wingwash}, and asks whether its asymmetric, left-right form can serve as a lateral proximity cue.
 
 \subsection{Aerodynamic and Tactile Sensing of Surfaces}
 \label{sec:rw_sensing}
 
-The idea that a flying agent can perceive nearby surfaces from its own induced airflow has strong support in biology and has recently been demonstrated in engineering. Nakata et al. showed that nocturnal mosquitoes divert away from walls and ground using mechanosensory cues derived from the modification of their self-generated airflow near a surface, and the authors reproduced this principle on a small quadcopter fitted with pressure probes, achieving obstacle detection at a distance of a few rotor diameters \cite{nakata2020}. For flapping-wing vehicles specifically, Tu et al. presented a motor-driven hummingbird robot that used the wing-loading signature in its actuator current to detect ground, walls, and obstacles, and navigated a narrow corridor without vision \cite{actingIsSeeing2019}. Notably, that study reported that its current-feedback method could not sense an obvious \emph{wall} effect on the platform, which the authors suggested may be caused by weak airflow along the span of the wing, and they therefore used wing collisions to sense walls instead \cite{actingIsSeeing2019}. This outcome is directly relevant to the present work, since it indicates that the usefulness of an aerodynamic wall cue cannot be assumed and depends on the platform and conditions. It is not a direct counterpart of the present study, however: that vehicle is some two orders of magnitude heavier, and it sensed through actuator current, whereas the signal examined here is the roll-disturbance estimate of an attitude observer. A complementary and well-established sensing modality is tactile contact: the antenna-based wall-following of the cockroach has been formalized into template models and transferred to mobile robots \cite{lee2008templates}, providing a lightweight, vision-free means of detecting surfaces along the direction of travel. The present study draws on both lines, treating the observer-estimated wall disturbance as a candidate aerodynamic proximity cue and a set of feelers as a tactile cue, and it reinterprets a quantity already estimated for control, in the manner of disturbance-observer-based methods \cite{chen2016disturbance}, as information about the environment.
+The idea that a flying agent can perceive nearby surfaces from its own induced airflow has strong support in biology and has recently been demonstrated in engineering. Nakata et al.\ showed that nocturnal mosquitoes divert away from walls and ground using mechanosensory cues derived from the modification of their self-generated airflow near a surface, and the authors reproduced this principle on a small quadcopter fitted with pressure probes, achieving obstacle detection at a distance of a few rotor diameters \cite{nakata2020aerodynamic}. For flapping-wing vehicles specifically, Tu et al.\ presented a motor-driven hummingbird robot that used the wing-loading signature in its actuator current to detect ground, walls, and obstacles, and navigated a narrow corridor without vision \cite{tu2019acting}. Notably, that study reported that its current-feedback method could not sense an obvious \emph{wall} effect on the platform, which the authors suggested may be caused by weak airflow along the span of the wing, and they therefore used wing collisions to sense walls instead \cite{tu2019acting}. This outcome is directly relevant to the present work, since it indicates that the usefulness of an aerodynamic wall cue cannot be assumed and depends on the platform and conditions. It is not a direct counterpart of the present study, however: that vehicle is some two orders of magnitude heavier, and it sensed through actuator current, whereas the signal examined here is the roll-disturbance estimate of an attitude observer. A complementary and well-established sensing modality is tactile contact: the antenna-based wall-following of the cockroach has been formalized into template models and transferred to mobile robots \cite{lee2008templates}, providing a lightweight, vision-free means of detecting surfaces along the direction of travel. The present study draws on both lines, treating the observer-estimated wall disturbance as a candidate aerodynamic proximity cue and a set of feelers as a tactile cue, and it reinterprets a quantity already estimated for control, in the manner of disturbance-observer-based methods \cite{chen2015disturbance}, as information about the environment.
 
 \subsection{Summary and Research Gap}
 \label{sec:rw_gap}
 
-The literature reviewed above establishes three points. First, flapping-wing vehicles are increasingly capable but have directed their onboard perception primarily toward flight stabilization rather than environmental sensing \cite{phan2017, karasek2018}. Second, the aerodynamic interaction between a wing and a nearby surface is physically established and distance-dependent, and perceiving surfaces from self-induced airflow has been demonstrated on real flyers and on a quadcopter \cite{nakata2020, lua2016}. Third, however, the one prior attempt to use such a cue specifically for \emph{flapping-wing wall} sensing found no obvious effect in its current feedback on hardware and resorted to contact sensing instead \cite{actingIsSeeing2019}. Taken together, these points indicate that the existence of a near-wall aerodynamic effect does not by itself establish that it provides a useful navigational signal, particularly when a vehicle also carries a simple tactile cue. To the authors' knowledge, the question of whether such an aerodynamic cue contributes measurably to confined-space navigation, as distinct from whether it can be measured at all, has not been examined directly for a flapping-wing vehicle. The present study addresses this gap: it characterizes the wall-induced disturbance as a proximity signal, integrates it with a tactile feeler in a reactive controller, and then, by controlled ablation, attributes the resulting competence to its actual sensory source. In doing so it distinguishes what a signal \emph{is} from what it \emph{does}, a distinction that a system evaluated only in its complete configuration cannot make.
+The literature reviewed above establishes three points. First, flapping-wing vehicles are increasingly capable but have directed their onboard perception primarily toward flight stabilization rather than environmental sensing \cite{phan2017design, karasek2018tailless}. Second, the aerodynamic interaction between a wing and a nearby surface is physically established and distance-dependent, and perceiving surfaces from self-induced airflow has been demonstrated on real flyers and on a quadcopter \cite{nakata2020aerodynamic, lu2016ground}. Third, however, the one prior attempt to use such a cue specifically for \emph{flapping-wing wall} sensing found no obvious effect in its current feedback on hardware and resorted to contact sensing instead \cite{tu2019acting}. Taken together, these points indicate that the existence of a near-wall aerodynamic effect does not by itself establish that it provides a useful navigational signal, particularly when a vehicle also carries a simple tactile cue. To the authors' knowledge, the question of whether such an aerodynamic cue contributes measurably to confined-space navigation, as distinct from whether it can be measured at all, has not been examined directly for a flapping-wing vehicle. The present study addresses this gap: it characterizes the wall-induced disturbance as a proximity signal, integrates it with a tactile feeler in a reactive controller, and then, by controlled ablation, attributes the resulting competence to its actual sensory source. In doing so it distinguishes what a signal \emph{is} from what it \emph{does}, a distinction that a system evaluated only in its complete configuration cannot make.
 
 \section{Methodology}
 \label{sec:methodology}
@@ -419,17 +265,17 @@ This study follows a simulation-based experimental design, in which an insect-sc
 \draw[arr] (kappa) -- (aero);
 % row 2: control and sensing
 \node[blk, below=12mm of plant] (sensors) {Noisy sensors\\(Sec.~\ref{sec:method_noise})};
-\node[key, right=12mm of sensors] (kf) {Observer:\\state $\hat{\mathbf{x}}$, disturbance $\hat{\delta}$};
+\node[key, right=12mm of sensors] (kf) {Observer: state $\hat{\mathbf{x}}$,\\wing-wash $\hat{\delta}$};
 \node[blk, right=12mm of kf] (nav) {Reactive navigation\\(Sec.~\ref{sec:method_nav})};
 \draw[arr] (plant) -- (sensors);
 \draw[arr] (sensors) -- (kf);
 \node[blk, below=10mm of kf] (lqg) {LQG regulator\\(Sec.~\ref{sec:method_control})};
 \draw[arr] (kf) -- node[right, pos=0.4] {$\hat{\mathbf{x}}$} (lqg);
-\draw[arr] (kf) -- node[above] {$\hat{\delta}$ (wing-wash)} (nav);
+\draw[arr] (kf) -- node[above] {$\hat{\delta}$} (nav);
 \draw[arr] (nav) |- (lqg.east);
-\draw[arr] (lqg) -| (plant.south);
+\draw[arr] (lqg.west) -| ($(sensors.west)+(-6mm,0)$) |- (plant.west);
 % row 3: evaluation
-\node[grp, below=20mm of sensors] (e1) {Signal\\characterization};
+\node[grp, below=34mm of sensors] (e1) {Signal\\characterization};
 \node[grp, right=10mm of e1] (e2) {Navigation \&\\inspection};
 \node[grp, right=10mm of e2] (e3) {Channel\\ablation};
 \node[grp, right=10mm of e3] (e4) {Statistical\\analysis};
@@ -445,15 +291,23 @@ This study follows a simulation-based experimental design, in which an insect-sc
 \subsection{Simulation Framework and Vehicle Model}
 \label{sec:method_vehicle}
 
-The vehicle is modelled in the MuJoCo rigid-body physics engine, which integrates the six-degree-of-freedom body dynamics, while all aerodynamic forces are supplied externally by the blade-element model of Section~\ref{sec:method_aero}, since the engine does not itself resolve the unsteady low-Reynolds-number flow at this scale. The wings are represented as prescribed-motion, massless aerodynamic surfaces whose kinematics are imposed at each timestep; this choice follows established practice for quasi-steady flapping simulation and avoids a spurious inertial-reaction artefact that arises when finite-mass wings are driven on a free body, while preserving the forces and moments that the wings transmit to the body. Each wing follows a sinusoidal stroke angle $\phi_s(t) = \Phi\cos(2\pi f t)$, with the feathering angle switching smoothly between $\pm45^\circ$ at each stroke reversal; the hover stroke amplitude, $\Phi = 72.6^\circ$, is the value at which the cycle-averaged lift equals the weight. The thrust, roll, and pitch commands act as common-mode amplitude, differential amplitude, and stroke-offset changes respectively, and yaw is commanded through a split-cycle asymmetry. The body frame is defined with its $x$ axis forward, $y$ axis to the left, and $z$ axis upward, with origin at the centre of mass. 
+The vehicle is modelled in the MuJoCo rigid-body physics engine, which supplies the mass properties, the wing kinematics, and the ray casting used for sensing. The six-degree-of-freedom body dynamics are advanced by a semi-implicit Euler step at the physics timestep, with all aerodynamic forces supplied by the blade-element model of Section~\ref{sec:method_aero}, since the engine does not itself resolve the unsteady low-Reynolds-number flow at this scale. The wings are represented as prescribed-motion, massless aerodynamic surfaces whose kinematics are imposed at each timestep; this choice follows established practice for quasi-steady flapping simulation and avoids a spurious inertial-reaction artefact that arises when finite-mass wings are driven on a free body, while preserving the forces and moments that the wings transmit to the body. Each wing follows a sinusoidal stroke angle $\phi_s(t) = \Phi\cos(2\pi f t)$, with the feathering angle switching smoothly between $\pm45^\circ$ at each stroke reversal; the hover stroke amplitude, $\Phi = 72.6^\circ$, is the value at which the cycle-averaged lift equals the weight. The thrust, roll, and pitch commands act as common-mode amplitude, differential amplitude, and stroke-offset changes respectively, and yaw is commanded through a split-cycle asymmetry. The body frame is defined with its $x$ axis forward, $y$ axis to the left, and $z$ axis upward, with origin at the centre of mass. 
 
 Figure~\ref{fig:model} shows the modelled vehicle and the discretization of its wings. Panel (a) gives the body, the two wings, and the body coordinate frame, with the principal dimensions marked, and panel (b) shows one wing divided into the $N_s = 20$ spanwise blade-element strips used for the aerodynamic computation of Section~\ref{sec:method_aero}, together with the stroke kinematics imposed in hover.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.62\linewidth]{figures/model_iso.png}\hfill
-\includegraphics[width=0.36\linewidth]{figures/model_wing_detail.png}
-\caption{Simulated vehicle geometry and blade-element wing discretization.}
+\begin{subfigure}[b]{0.62\linewidth}
+\centering
+\includegraphics[width=\linewidth]{figures/model_iso.png}
+\caption{}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.36\linewidth}
+\centering
+\includegraphics[width=\linewidth]{figures/model_wing_detail.png}
+\caption{}
+\end{subfigure}
+\caption{Simulated vehicle geometry and blade-element wing discretization: (a) body, wings, and body coordinate frame with the principal dimensions and (b) one wing divided into spanwise blade-element strips, with the hover stroke kinematics.}
 \label{fig:model}
 \end{figure*}
 
@@ -490,7 +344,7 @@ Wingtip-strike radius & & $13.3$~mm \\
 \subsection{Rigid-Body Dynamics and Linearized Model}
 \label{sec:method_dynamics}
 
-The vehicle is treated as a rigid body of mass $m$ with diagonal inertia tensor $\mathbf{I} = \mathrm{diag}(I_{xx}, I_{yy}, I_{zz})$. Writing $\mathbf{p}$ for world-frame position, $\mathbf{v}$ for world-frame velocity, $\boldsymbol{\eta} = [\phi, \theta, \psi]^\top$ for the Euler angles, and $\boldsymbol{\omega}$ for the body angular velocity, the equations of motion are
+The vehicle is treated as a rigid body of mass $m$ with inertia tensor $\mathbf{I}$, whose diagonal is $(I_{xx}, I_{yy}, I_{zz})$; its one non-zero product of inertia, $I_{xz}$, is about one percent of $I_{xx}$ and is retained in the simulation. Writing $\mathbf{p}$ for world-frame position, $\mathbf{v}$ for world-frame velocity, $\boldsymbol{\eta} = [\phi, \theta, \psi]^\top$ for the Euler angles, and $\boldsymbol{\omega}$ for the body angular velocity, the equations of motion are
 \begin{equation}
     \dot{\mathbf{p}} = \mathbf{v}, \qquad m\,\dot{\mathbf{v}} = \mathbf{R}(\boldsymbol{\eta})\,\mathbf{F}_b - m g\,\mathbf{e}_3,
     \label{eq:trans}
@@ -504,7 +358,7 @@ where $\mathbf{R}$ is the body-to-world rotation, $\mathbf{W}$ maps body rates t
     \dot{\mathbf{x}}(t) = \mathbf{A}\,\mathbf{x}(t) + \mathbf{B}\,\mathbf{u}(t) + \mathbf{E}\,w(t),
     \label{eq:cont_ss}
 \end{equation}
-where $\mathbf{x} = [v_x, v_y, v_z, \omega_x, \omega_y, \phi, \theta, z_I]^\top$ collects the velocity, roll-rate and pitch-rate, and roll and pitch perturbations together with an integrated-altitude term $z_I$, $\mathbf{u} = [u_T, u_\phi, u_\theta]^\top$ holds the thrust, roll, and pitch commands, and $w(t)$ is a roll-axis disturbance developed in Section~\ref{sec:method_control}. The matrices $\mathbf{A}$ and $\mathbf{B}$ are obtained numerically, by central finite differences of the cycle-averaged aerodynamic wrench with respect to the body velocities, the body rates, and each command about the hover trim. Yaw and yaw rate are excluded from this model and are regulated by a separate heading loop. Because control is applied at a fixed interval $T_c$, the model is discretized exactly under a zero-order hold through a single matrix exponential of the augmented generator,
+where $\mathbf{x} = [v_x, v_y, v_z, \omega_x, \omega_y, \phi, \theta, z_I]^\top$ collects the velocity, roll-rate and pitch-rate, and roll and pitch perturbations together with the altitude error $z_I$, which is the integral of $v_z$, $\mathbf{u} = [u_T, u_\phi, u_\theta]^\top$ holds the thrust, roll, and pitch commands, and $w(t)$ is a roll-axis disturbance developed in Section~\ref{sec:method_control}. The matrices $\mathbf{A}$ and $\mathbf{B}$ are obtained numerically, by central finite differences of the cycle-averaged aerodynamic wrench with respect to the body velocities, the body rates, and each command about the hover trim. Yaw and yaw rate are excluded from this model and are regulated by a separate heading loop. Because control is applied at a fixed interval $T_c$, the model is discretized exactly under a zero-order hold through a single matrix exponential of the augmented generator,
 \begin{equation}
     \begin{bmatrix} \mathbf{A}_d & \mathbf{B}_d \\ \mathbf{0} & \mathbf{I} \end{bmatrix} = \exp\!\left( \begin{bmatrix} \mathbf{A} & \mathbf{B} \\ \mathbf{0} & \mathbf{0} \end{bmatrix} T_c \right),
     \label{eq:zoh}
@@ -534,12 +388,12 @@ The net force and torque transmitted by one wing are the strip sums $\mathbf{F}_
 \subsection{Near-Wall Interaction Law}
 \label{sec:method_wingwash}
 
-When a wing operates near a surface, its lift is modified relative to the free-air value, an effect that is distance-dependent and well established for flapping-wing flight \cite{cheeseman1955, maeda2013, lua2016}. Adopting the classical ground-effect relation at the level of the individual strip, the lift of a strip at perpendicular distance $d$ from a wall is scaled by
+When a wing operates near a surface, its lift is modified relative to the free-air value, an effect that is distance-dependent and well established for flapping-wing flight \cite{cheeseman1959effect, maeda2013ground, lu2016ground}. Adopting the classical ground-effect relation at the level of the individual strip, the translational lift of a strip at perpendicular distance $d$ from a wall is scaled by
 \begin{equation}
     \kappa(d) = \min\!\left( 1 + K_{\mathrm{GE}} \left( \frac{R}{4d} \right)^2,\; \kappa_{\max} \right),
     \label{eq:kappa}
 \end{equation}
-with $K_{\mathrm{GE}} = 1.0$ and $\kappa_{\max} = 2.0$ throughout, where $\kappa_{\max}$ caps the enhancement at close range to prevent the non-physical divergence of the expression as $d\to 0$. It is stated plainly that Eq.~\eqref{eq:kappa} is imposed rather than derived: the simulation does not compute the near-wall flow but applies this scalar multiplier to the modelled strip lift, so $K_{\mathrm{GE}}$ is the single parameter on which the quantitative characterization depends, and its influence is examined explicitly. When the vehicle sits beside a wall, the strips of the near wing lie at smaller distances than those of the far wing and are enhanced more strongly, and the resulting left-right asymmetry produces a net body-axis roll torque,
+with $K_{\mathrm{GE}} = 1.0$ and $\kappa_{\max} = 2.0$ throughout, where $\kappa_{\max}$ caps the enhancement at close range to prevent the non-physical divergence of the expression as $d\to 0$. It is stated plainly that Eq.~\eqref{eq:kappa} is imposed rather than derived: the simulation does not compute the near-wall flow but applies this scalar multiplier to the modelled translational lift of each strip, leaving the drag, rotational, and added-mass terms unchanged, so $K_{\mathrm{GE}}$ is the single parameter on which the quantitative characterization depends, and its influence is examined explicitly. When the vehicle sits beside a wall, the strips of the near wing lie at smaller distances than those of the far wing and are enhanced more strongly, and the resulting left-right asymmetry produces a net body-axis roll torque,
 \begin{equation}
     \tau_x^{\mathrm{wall}} \approx \sum_{i} \big( \kappa(d_i) - 1 \big)\, \mathrm{d}F_{z,i}\, y_i,
     \label{eq:tauwall}
@@ -561,9 +415,9 @@ Stabilized flight uses a linear-quadratic-Gaussian (LQG) regulator acting on a K
     \begin{bmatrix} \mathbf{x}_{k+1} \\ \delta_{k+1} \end{bmatrix} = \begin{bmatrix} \mathbf{A}_d & \mathbf{E}_d \\ \mathbf{0} & 1 \end{bmatrix} \begin{bmatrix} \mathbf{x}_k \\ \delta_k \end{bmatrix} + \begin{bmatrix} \mathbf{B}_d \\ \mathbf{0} \end{bmatrix} \mathbf{u}_k + \begin{bmatrix} \mathbf{0} \\ 1 \end{bmatrix} w^{\delta}_k,
     \label{eq:aug}
 \end{equation}
-and the augmented Kalman filter returns, each step, an estimate $\hat{\delta}_k$ alongside the state estimate $\hat{\mathbf{x}}_k$. The control law regulates the estimated state while feeding the estimated disturbance forward for rejection, $\mathbf{u}_k = -\mathbf{K}\,\hat{\mathbf{x}}_k - \mathbf{K}_{\delta}\,\hat{\delta}_k + \mathbf{u}_{\mathrm{ref},k}$, where $\mathbf{u}_{\mathrm{ref},k}$ is the reference from the navigation layer. The key point, in the manner of disturbance-observer-based methods \cite{chen2016disturbance}, is that $\hat{\delta}_k$ is not merely a quantity to reject: when a wall is present it estimates the wall-induced torque of Eq.~\eqref{eq:tauwall}, so the same estimator that stabilizes the vehicle also measures its lateral surroundings. No component of this architecture is learned; all gains follow analytically from the linearized model. The deployed weights, which differ from the source-module defaults, are reported in Table~\ref{tab:params} so that the controller is reproducible.
+and the augmented Kalman filter returns, each step, an estimate $\hat{\delta}_k$ alongside the state estimate $\hat{\mathbf{x}}_k$. The estimator gain is computed from the continuous-time counterpart of Eq.~\eqref{eq:aug} through the algebraic Riccati equation, and the estimator is then propagated over each control interval under an exact zero-order hold. The control law regulates the estimated state while feeding the estimated disturbance forward for rejection, $\mathbf{u}_k = -\mathbf{K}\,\hat{\mathbf{x}}_k - \mathbf{K}_{\delta}\,\hat{\delta}_k + \mathbf{u}_{\mathrm{ref},k}$, where $\mathbf{u}_{\mathrm{ref},k}$ is the reference from the navigation layer. The key point, in the manner of disturbance-observer-based methods \cite{chen2015disturbance}, is that $\hat{\delta}_k$ is not merely a quantity to reject: when a wall is present it estimates the wall-induced torque of Eq.~\eqref{eq:tauwall}, so the same estimator that stabilizes the vehicle also measures its lateral surroundings. No component of this architecture is learned; all gains follow analytically from the linearized model. The deployed weights, which differ from the source-module defaults, are reported in Table~\ref{tab:params} so that the controller is reproducible.
 
-Figure~\ref{fig:hover} illustrates the stabilizing action of this regulator in free air. Released with a $10^\circ$ attitude offset in both pitch and roll, the uncontrolled vehicle diverges past $45^\circ$ within about $124$~ms, whereas the regulated vehicle settles to hover and rejects a roll gust and a pitch gust applied at $400$ and $800$~ms while holding its height within about $1$~mm of the $50$~mm reference.
+Figure~\ref{fig:hover} illustrates the stabilizing action of a regulator of this architecture in free air; this demonstration uses the source-module default weights and not the deployed weights of Table~\ref{tab:params}. Released with a $10^\circ$ attitude offset in both pitch and roll, the uncontrolled vehicle diverges past $45^\circ$ within about $124$~ms, whereas the regulated vehicle settles to hover and rejects a roll gust and a pitch gust applied at $400$ and $800$~ms while holding its height within about $1$~mm of the $50$~mm reference.
 
 \begin{figure}[t]
 \centering
@@ -575,7 +429,7 @@ Figure~\ref{fig:hover} illustrates the stabilizing action of this regulator in f
 \subsection{Sensor Suite and Noise Model}
 \label{sec:method_noise}
 
-The vehicle carries two sensory channels. The first is the aerodynamic proximity channel, which is not a physical sensor but the roll-axis disturbance estimate of Section~\ref{sec:method_control}, and therefore adds no mass or power. The second is a set of seven feelers, modelled as rays cast from the nose at $0^\circ$, $\pm30^\circ$, $\pm50^\circ$, and $\pm90^\circ$ to the heading, so that the outermost pair points sideways, each returning the distance to the first wall it meets up to a maximum range of $0.16$~m. It is stated at the outset, and revisited in the ablation, that these feelers are idealized: they return exact geometric range through free space, rather than the contact or bending signals of a physical tactile antenna. With a nominal range of about six times the vehicle's span, the modelled channel behaves more like a short-range rangefinder than a contact sensor, which is why its range is the property degraded in Sections~\ref{sec:results_regimes} and~\ref{sec:results_confirm}. All measurements are corrupted by an additive Gaussian noise model,
+The vehicle carries two sensory channels. The first is the aerodynamic proximity channel, which is not a physical sensor but the roll-axis disturbance estimate of Section~\ref{sec:method_control}, and therefore adds no mass or power. The second is a set of seven feelers, modelled as rays cast from the centre of mass at $0^\circ$, $\pm30^\circ$, $\pm50^\circ$, and $\pm90^\circ$ to the heading, so that the outermost pair points sideways, each returning the distance to the first wall it meets up to a maximum range of $0.16$~m. It is stated at the outset, and revisited in the ablation, that these feelers are idealized: they return exact geometric range through free space, rather than the contact or bending signals of a physical tactile antenna. With a nominal range of about six times the vehicle's span, the modelled channel behaves more like a short-range rangefinder than a contact sensor, which is why its range is the property degraded in Sections~\ref{sec:results_regimes} and~\ref{sec:results_confirm}. All measurements are corrupted by an additive Gaussian noise model,
 \begin{equation}
     \tilde{y}_{j,k} = y_{j,k} + \nu_{j,k}, \qquad \nu_{j,k} \sim \mathcal{N}\!\left(0, (\lambda\,\sigma_j)^2\right),
     \label{eq:noise}
@@ -759,7 +613,7 @@ Far field & 20 to 40 & $-3.63$ & $0.998$ \\
 \end{tabular*}
 \end{table}
 
-Second, the resolution. In hover under nominal sensor noise, away from any wall, the filtered estimate fluctuates with a standard deviation of $24.7$~rad\,s$^{-2}$ about a mean indistinguishable from zero. Dividing this noise floor by the local slope of the static response gives the distance resolution, which is below one millimetre out to about $36$~mm and about $1.2$~mm at $38$~mm. It is finest, at approximately $7$ to $13~\mu$m, in the $10$ to $16$~mm region where the response is steepest; that region straddles the strike radius, and within the flyable band the finest values are $7$ to $9~\mu$m at $14$ to $16$~mm, coarsening to about $40~\mu$m at $20$~mm and $0.4$~mm at $30$~mm. This figure is a noise-equivalent distance under the assumed noise model, not a hardware resolution. Third, the observer fidelity. Comparing the settled estimate with the true induced acceleration, the observer recovers the signal with a direct-current gain of approximately $0.57$, essentially invariant with distance over the $15$ to $30$~mm range; below about $15$~mm the measurement is unreliable owing to position-hold drift. A step change in wall distance produces a ten-to-ninety-percent rise in about $13$~ms. Fourth, the two-wall response. Between two walls the induced roll acceleration is odd-symmetric in lateral offset and nulls at the corridor centreline; at offsets of $4$, $8$, and $12$~mm the directly measured two-wall response equals the difference of the single-wall response to a ratio of unity to fifteen decimal places. Figure~\ref{fig:observer_twowall} illustrates the last two properties. Panel (a) shows the observer gain against wall distance, which stays between $0.53$ and $0.59$ over the $15$ to $30$~mm band, and panel (b) shows the odd-symmetric two-wall response, which crosses zero at the centreline with a slope of about $109$~rad\,s$^{-2}$ per millimetre and coincides with the single-wall superposition.
+Second, the resolution. In hover under nominal sensor noise, away from any wall, the filtered estimate fluctuates with a standard deviation of $24.7$~rad\,s$^{-2}$ about a mean indistinguishable from zero. Dividing this noise floor by the local slope of the static response gives the distance resolution, which is below one millimetre out to about $36$~mm and about $1.2$~mm at $38$~mm. It is finest, at approximately $7$ to $13~\mu$m, in the $10$ to $16$~mm region where the response is steepest; that region straddles the strike radius, and within the flyable band the finest values are $7$ to $9~\mu$m at $14$ to $16$~mm, coarsening to about $40~\mu$m at $20$~mm and $0.4$~mm at $30$~mm. This figure is a noise-equivalent distance under the assumed noise model, not a hardware resolution. Third, the observer fidelity. Comparing the settled estimate with the true induced acceleration, the observer recovers the signal with a direct-current gain of approximately $0.57$, essentially invariant with distance over the $15$ to $30$~mm range; below about $15$~mm the measurement is unreliable owing to position-hold drift. A step change in wall distance produces a ten-to-ninety-percent rise in about $13$~ms. Fourth, the two-wall response. Between two walls the induced roll acceleration is odd-symmetric in lateral offset and nulls at the corridor centreline; at offsets of $4$, $8$, and $12$~mm the directly measured two-wall response equals the difference of the single-wall response to a ratio of unity to within $2\times10^{-15}$. Figure~\ref{fig:observer_twowall} illustrates the last two properties. Panel (a) shows the observer gain against wall distance, which stays between $0.53$ and $0.59$ over the $15$ to $30$~mm band, and panel (b) shows the odd-symmetric two-wall response, which crosses zero at the centreline with a slope of about $109$~rad\,s$^{-2}$ per millimetre and coincides with the single-wall superposition.
 
 \begin{figure*}[t]
 \centering
@@ -1107,7 +961,7 @@ The width sweep of Section~\ref{sec:results_width} was meant to test a second ob
 \subsection{Relation to Prior Work}
 \label{sec:disc_prior}
 
-These findings connect closely to the two most relevant prior studies. Nakata et al. demonstrated that mosquitoes, and a bioinspired quadcopter, can detect surfaces from modifications of their self-induced airflow \cite{nakata2020}, establishing that aerodynamic surface sensing is physically real and useful on some platforms. The present study does not contradict this; it characterizes an analogous signal for a flapping-wing vehicle and confirms that it is measurable. What it adds is the separate question of marginal utility: whether, on a vehicle that also carries a tactile cue, the aerodynamic signal improves the task. The outcome here is conditional: no improvement was detected beside an idealized tactile channel, and a clear one was confirmed when the feeler range was limited to $0.05$~m. The caution this implies is also consistent with the hardware experience of Tu et al., who found no obvious wall effect in the current feedback of their flapping-wing platform and used wing contact instead \cite{actingIsSeeing2019}. Taken together, the prior work and the present study suggest that the existence of a near-wall aerodynamic effect does not by itself guarantee a useful navigational signal, and that whether it earns a place depends on the platform, the environment, and the alternative sensing available. The flapping-wing aerodynamics literature also reports a richer near-wall behaviour than the model contains, with force enhancement, reduction, and recovery as clearance decreases \cite{lua2016}. The saturating static response observed here does not correspond to those regimes; it follows from the cap in the adopted law, so the physical plausibility of the modelled signal rests on the distance dependence of the wall interaction in general and not on any agreement in its close-range form.
+These findings connect closely to the two most relevant prior studies. Nakata et al.\ demonstrated that mosquitoes, and a bioinspired quadcopter, can detect surfaces from modifications of their self-induced airflow \cite{nakata2020aerodynamic}, establishing that aerodynamic surface sensing is physically real and useful on some platforms. The present study does not contradict this; it characterizes an analogous signal for a flapping-wing vehicle and confirms that it is measurable. What it adds is the separate question of marginal utility: whether, on a vehicle that also carries a tactile cue, the aerodynamic signal improves the task. The outcome here is conditional: no improvement was detected beside an idealized tactile channel, and a clear one was confirmed when the feeler range was limited to $0.05$~m. The caution this implies is also consistent with the hardware experience of Tu et al., who found no obvious wall effect in the current feedback of their flapping-wing platform and used wing contact instead \cite{tu2019acting}. Taken together, the prior work and the present study suggest that the existence of a near-wall aerodynamic effect does not by itself guarantee a useful navigational signal, and that whether it earns a place depends on the platform, the environment, and the alternative sensing available. The flapping-wing aerodynamics literature also reports a richer near-wall behaviour than the model contains, with force enhancement, reduction, and recovery as clearance decreases \cite{lu2016ground}. The saturating static response observed here does not correspond to those regimes; it follows from the cap in the adopted law, so the physical plausibility of the modelled signal rests on the distance dependence of the wall interaction in general and not on any agreement in its close-range form.
 
 \subsection{Implications}
 \label{sec:disc_implications}
@@ -1117,7 +971,7 @@ The practical implication is a cautionary one for sensor design at this scale. A
 \subsection{Limitations}
 \label{sec:disc_limitations}
 
-Several limitations bound these conclusions. First, the study is conducted entirely in simulation; no result has been shown to transfer to hardware, and the experience of prior investigators who found no obvious wall effect on a physical platform \cite{actingIsSeeing2019} underscores that this transfer is an open question. Second, the near-wall law of Eq.~\eqref{eq:kappa} is imposed rather than derived, and the sensitivity analysis of Section~\ref{sec:results_sensitivity} varies only the coefficient within that fixed functional form, so structural uncertainty in the form itself is untested. In particular, the law only ever enhances lift and omits the force-reduction regime reported for flapping wings at small clearance \cite{lua2016}; the saturation knee of the modelled response is produced by the cap $\kappa_{\max}$, and if a reduction regime extended into the flyable band, the modelled signal would be wrong there in magnitude and possibly in sign. Third, the sensor-noise model is an assumption, and the sub-millimetre resolution figure is a noise-equivalent distance under that assumption rather than a demonstrated sensor resolution. Fourth, and most consequentially for the central finding, the feeler model is idealized, and the null result is conditional on that idealization. A realistically imperfect tactile channel was approximated only through range limitation: the confirmed advantage was established at a single range limit of $0.05$~m, the $0.03$~m cell is incomplete, and the dropout and elevated-noise degradations were not evaluated. Fifth, the statistical basis is modest: a single noise realization for the noise floor, five for each cell of the detection-floor and sensitivity experiments, and, for the main comparison, five matched seeds across forty courses, sufficient to bound any benefit of the aerodynamic channel with idealized feelers at roughly $6.5$ percentage points of strike-free completion, but not to certify formal equivalence within the pre-specified margin. The confirmatory test used one noise seed on each of its $200$ courses, and the gain sweep is exploratory. The pre-specified comparison of the width sweep was uninformative, because strike-free completion was at its floor in the two narrowest bands; the choice of those bands for the primary comparison did not anticipate this, and the dependence of the aerodynamic contribution on corridor width therefore remains untested below about $58$~mm. The millimetre-level localization and sizing figures likewise come from a single straight corridor with one isolated opening; on the randomized courses the mean localization error was $7.9$~mm. Finally, the detection task concerns a geometric opening, not a specific hazard, and the correlation between an opening and a hazard is assumed from the application setting rather than measured. These limitations do not undermine the central, conditional dissociation, but they bound the range over which the reported numbers should be read as claims about a physical system.
+Several limitations bound these conclusions. First, the study is conducted entirely in simulation; no result has been shown to transfer to hardware, and the experience of prior investigators who found no obvious wall effect on a physical platform \cite{tu2019acting} underscores that this transfer is an open question. Second, the near-wall law of Eq.~\eqref{eq:kappa} is imposed rather than derived, and the sensitivity analysis of Section~\ref{sec:results_sensitivity} varies only the coefficient within that fixed functional form, so structural uncertainty in the form itself is untested. In particular, the law only ever enhances lift and omits the force-reduction regime reported for flapping wings at small clearance \cite{lu2016ground}; the saturation knee of the modelled response is produced by the cap $\kappa_{\max}$, and if a reduction regime extended into the flyable band, the modelled signal would be wrong there in magnitude and possibly in sign. Third, the sensor-noise model is an assumption, and the sub-millimetre resolution figure is a noise-equivalent distance under that assumption rather than a demonstrated sensor resolution. Fourth, and most consequentially for the central finding, the feeler model is idealized, and the null result is conditional on that idealization. A realistically imperfect tactile channel was approximated only through range limitation: the confirmed advantage was established at a single range limit of $0.05$~m, the $0.03$~m cell is incomplete, and the dropout and elevated-noise degradations were not evaluated. Fifth, the statistical basis is modest: a single noise realization for the noise floor, five for each cell of the detection-floor and sensitivity experiments, and, for the main comparison, five matched seeds across forty courses, sufficient to bound any benefit of the aerodynamic channel with idealized feelers at roughly $6.5$ percentage points of strike-free completion, but not to certify formal equivalence within the pre-specified margin. The confirmatory test used one noise seed on each of its $200$ courses, and the gain sweep is exploratory. The pre-specified comparison of the width sweep was uninformative, because strike-free completion was at its floor in the two narrowest bands; the choice of those bands for the primary comparison did not anticipate this, and the dependence of the aerodynamic contribution on corridor width therefore remains untested below about $58$~mm. The millimetre-level localization and sizing figures likewise come from a single straight corridor with one isolated opening; on the randomized courses the mean localization error was $7.9$~mm. Finally, the detection task concerns a geometric opening, not a specific hazard, and the correlation between an opening and a hazard is assumed from the application setting rather than measured. These limitations do not undermine the central, conditional dissociation, but they bound the range over which the reported numbers should be read as claims about a physical system.
 
 \subsection{Future Research}
 \label{sec:disc_future}
@@ -1146,4 +1000,3 @@ The complete simulation framework, controller, experiment scripts, and generated
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

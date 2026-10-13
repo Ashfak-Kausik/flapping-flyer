@@ -1,0 +1,10 @@
+# LaTeX build products (the PDF is kept)
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.spl
+*.synctex.gz
