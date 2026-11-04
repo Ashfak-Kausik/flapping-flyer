@@ -22,8 +22,18 @@ class NoiseModel:
     S_YAW   = 0.005    # heading estimate          (rad)
     S_H     = 0.001    # height                    (m)
 
-    def __init__(self, level=1.0, seed=0):
+    def __init__(self, level=1.0, seed=0, feeler_range=None, feeler_dropout=0.0, feeler_noise_mult=1.0):
+        """feeler_* degrade ONLY what feel() returns (the navigation feelers); all default to the
+        idealized feeler (off), in which case feel() is bit-for-bit the original.
+          feeler_range      readings beyond this true distance (m) return clear (BIG).
+          feeler_dropout    per-ray, per-call probability of no reading; a dropped ray HOLDS ITS LAST
+                            returned reading (per ray index; no dropout until a ray has one). Drawn
+                            from a separate RNG so the Gaussian noise stream is not consumed by it.
+          feeler_noise_mult extra multiplier on the feeler range sigma only (IMU sigmas untouched)."""
         self.L = float(level); self.rng = np.random.default_rng(seed)
+        self.f_range = feeler_range; self.f_drop = float(feeler_dropout); self.f_mult = float(feeler_noise_mult)
+        self.rng_drop = np.random.default_rng([int(seed), 1])
+        self._held = []                                  # last returned reading per ray index (dropout hold)
 
     def _n(self, sigma):
         return self.rng.normal(0.0, sigma * self.L) if self.L > 0 else 0.0
@@ -39,4 +49,14 @@ class NoiseModel:
 
     def feel(self, dists, BIG=0.999):
         """Add range noise to finite feeler readings; a clear feeler stays clear."""
-        return [d if d >= BIG else max(0.0, d + self._n(self.S_RANGE)) for d in dists]
+        if self.f_range is None and self.f_drop <= 0.0 and self.f_mult == 1.0:      # idealized default
+            return [d if d >= BIG else max(0.0, d + self._n(self.S_RANGE)) for d in dists]
+        if len(self._held) != len(dists): self._held = [None] * len(dists)
+        out = []
+        for i, d in enumerate(dists):
+            if self.f_drop > 0.0 and self._held[i] is not None and self.rng_drop.random() < self.f_drop:
+                out.append(self._held[i]); continue                                  # dropped: hold last value
+            if d >= BIG or (self.f_range is not None and d > self.f_range): r = BIG
+            else: r = max(0.0, d + self._n(self.S_RANGE * self.f_mult))
+            self._held[i] = r; out.append(r)
+        return out

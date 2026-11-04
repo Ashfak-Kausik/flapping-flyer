@@ -431,3 +431,7 @@ Full citations and in-context usage are in `docs/02_aerodynamics.md`; the core s
 - Nekoo, S.R., Rashad, R., De Wagter, C., Fuller, S.B., de Croon, G., Stramigioli, S.,
   Ollero, A. (2025). A review on flapping-wing robots: Recent progress and challenges.
   *The International Journal of Robotics Research* 44(14), 2305–2339.
+
+## License
+
+Released under the [MIT License](LICENSE).
