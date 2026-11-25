@@ -162,7 +162,7 @@ def fig05():
             mec=G, mew=1.0, ls="none", label="sum of two single-wall terms")
     xx = np.array([-6, 6]); ax.plot(xx, slope * xx / 1e3, color=G, lw=0.9, ls=(0, (4, 2)), label=f"fit within ±7.5 mm, {slope:.0f} rad/s² per mm")
     ax.axhline(0, color=K, lw=0.5); ax.axvline(0, color=K, lw=0.5)
-    ax.set_xlabel("lateral offset from corridor centre (mm)"); ax.set_ylabel("net roll acceleration (10³ rad/s²)")
+    ax.set_xlabel("lateral offset from corridor center (mm)"); ax.set_ylabel("net roll acceleration (10³ rad/s²)")
     ax.legend(frameon=False, loc="upper left"); clean(ax)
     save(fig, "fig05_two_wall_centering")
 

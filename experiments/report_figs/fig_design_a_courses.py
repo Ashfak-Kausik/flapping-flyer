@@ -123,7 +123,7 @@ def legend_handles():
     L = plt.Line2D
     return [L([], [], color=K, lw=1.5, label="wall"),
             L([], [], color=K, lw=0, marker=r"$\rightarrow$", ms=9, label="wall opening (gap in wall)"),
-            L([], [], color=G, lw=0.6, ls=(0, (2, 2)), label="centreline"),
+            L([], [], color=G, lw=0.6, ls=(0, (2, 2)), label="centerline"),
             L([], [], color=K, lw=0, marker="o", ms=3.6, label="start"),
             L([], [], color=K, lw=0, marker="o", mfc="white", ms=7, label="finish pad")]
 
